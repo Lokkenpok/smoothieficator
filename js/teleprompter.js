@@ -35,6 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let savedSongs = [];
   let currentSongIndex = -1;
 
+  // Flag to indicate navigation in progress (to prevent duplicate saves)
+  window.navigationInProgress = false;
+
   // Initialize scroll controls
   startScrollBtn.addEventListener("click", startScrolling);
   stopScrollBtn.addEventListener("click", stopScrolling);
@@ -255,19 +258,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Navigate to previous song
   function goToPreviousSong() {
+    console.log("Attempting to go to previous song");
     const songs = loadSavedSongs();
-    if (songs.length === 0) return; // No songs saved
+    console.log(`Found ${songs.length} total songs`);
 
-    if (currentSongIndex <= 0) {
-      currentSongIndex = songs.length - 1; // Wrap around to the last song
-    } else {
-      currentSongIndex--;
+    if (songs.length === 0) {
+      console.log("No songs found, exiting");
+      return; // No songs saved
     }
 
-    console.log(
-      `Going to previous song: ${currentSongIndex} of ${songs.length}`
+    // Find unique songs (by title and artist)
+    const uniqueSongs = getUniqueSongs(songs);
+    console.log(`Found ${uniqueSongs.length} unique songs`);
+
+    if (uniqueSongs.length === 0) return;
+
+    // Find current song in unique list
+    let currentTitle = document.querySelector(".song-header h2")?.textContent;
+    let currentArtist = document
+      .querySelector(".song-header h3")
+      ?.textContent?.replace(/by\s+/i, "")
+      .trim();
+    console.log(`Current song: "${currentTitle}" by "${currentArtist}"`);
+
+    let uniqueIndex = uniqueSongs.findIndex(
+      (song) => song.title === currentTitle && song.artist === currentArtist
     );
-    displaySavedSong(songs[currentSongIndex]);
+    console.log(`Current song index: ${uniqueIndex}`);
+
+    if (uniqueIndex <= 0) {
+      uniqueIndex = uniqueSongs.length - 1; // Wrap around to the last song
+      console.log(`Wrapping to last song: ${uniqueIndex}`);
+    } else {
+      uniqueIndex--;
+      console.log(`Moving to previous song: ${uniqueIndex}`);
+    }
+
+    const prevSong = uniqueSongs[uniqueIndex];
+    console.log(`Will display: "${prevSong.title}" by "${prevSong.artist}"`);
+
+    // Set navigation flag to prevent duplicate saves
+    window.navigationInProgress = true;
+    displaySavedSong(prevSong);
+    setTimeout(() => {
+      window.navigationInProgress = false;
+    }, 500); // Increased timeout
   }
 
   // Navigate to next song
@@ -275,14 +310,49 @@ document.addEventListener("DOMContentLoaded", () => {
     const songs = loadSavedSongs();
     if (songs.length === 0) return; // No songs saved
 
-    if (currentSongIndex >= songs.length - 1 || currentSongIndex === -1) {
-      currentSongIndex = 0; // Wrap around to the first song
+    // Find unique songs (by title and artist)
+    const uniqueSongs = getUniqueSongs(songs);
+    if (uniqueSongs.length === 0) return;
+
+    // Find current song in unique list
+    let currentTitle = document.querySelector(".song-header h2")?.textContent;
+    let currentArtist = document
+      .querySelector(".song-header h3")
+      ?.textContent?.replace(/by\s+/i, "")
+      .trim();
+
+    let uniqueIndex = uniqueSongs.findIndex(
+      (song) => song.title === currentTitle && song.artist === currentArtist
+    );
+
+    if (uniqueIndex >= uniqueSongs.length - 1 || uniqueIndex === -1) {
+      uniqueIndex = 0; // Wrap around to the first song
     } else {
-      currentSongIndex++;
+      uniqueIndex++;
     }
 
-    console.log(`Going to next song: ${currentSongIndex} of ${songs.length}`);
-    displaySavedSong(songs[currentSongIndex]);
+    // Set navigation flag to prevent duplicate saves
+    window.navigationInProgress = true;
+    displaySavedSong(uniqueSongs[uniqueIndex]);
+    setTimeout(() => {
+      window.navigationInProgress = false;
+    }, 100);
+  }
+
+  // Helper function to get unique songs by title and artist
+  function getUniqueSongs(songs) {
+    const uniqueSongs = [];
+    const seen = new Set();
+
+    for (const song of songs) {
+      const key = `${song.title}-${song.artist}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueSongs.push(song);
+      }
+    }
+
+    return uniqueSongs;
   }
 
   // Display saved song (separate from the scraper.js function to avoid circular dependencies)
@@ -384,18 +454,18 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
 
       case "ArrowLeft":
-        // Only handle left arrow for song navigation if in teleprompter view
-        // and not using it to scroll the page up/down
-        if (!document.querySelector(".saved-songs")) {
+        // Check if we're in the song view and not on the saved songs list
+        if (!songContent.querySelector(".saved-songs")) {
+          console.log("Left arrow pressed in song view");
           e.preventDefault();
           goToPreviousSong();
         }
         break;
 
       case "ArrowRight":
-        // Only handle right arrow for song navigation if in teleprompter view
-        // and not using it to scroll the page up/down
-        if (!document.querySelector(".saved-songs")) {
+        // Check if we're in the song view and not on the saved songs list
+        if (!songContent.querySelector(".saved-songs")) {
+          console.log("Right arrow pressed in song view");
           e.preventDefault();
           goToNextSong();
         }

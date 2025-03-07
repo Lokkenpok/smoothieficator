@@ -98,16 +98,35 @@ document.addEventListener("DOMContentLoaded", () => {
     // Scroll to the top of the content
     teleprompter.scrollTop = 0;
 
-    // Save to local storage with the current timestamp as key
-    const timestamp = new Date().toISOString();
-    localSongs[timestamp] = song;
-    localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+    // Check if song already exists before saving
+    // Don't save if this is triggered by keyboard navigation
+    const isKeyboardNavigation = window.navigationInProgress === true;
+
+    if (!isKeyboardNavigation && !songExistsInStorage(song)) {
+      console.log("Saving song to storage (not a navigation event)");
+      // Save to local storage with the current timestamp as key
+      const timestamp = new Date().toISOString();
+      localSongs[timestamp] = song;
+      localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+    } else if (isKeyboardNavigation) {
+      console.log("Skipping save due to navigation event");
+    } else if (songExistsInStorage(song)) {
+      console.log("Skipping save because song already exists");
+    }
 
     // Dispatch event that song has loaded
     window.dispatchEvent(new CustomEvent("songLoaded"));
 
     // Make sure mini controls are visible
     document.getElementById("mini-controls").classList.add("visible");
+  }
+
+  // Helper function to check if song already exists in storage
+  function songExistsInStorage(newSong) {
+    return Object.values(localSongs).some(
+      (savedSong) =>
+        savedSong.title === newSong.title && savedSong.artist === newSong.artist
+    );
   }
 
   // Process song data from extraction tools
