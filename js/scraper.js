@@ -8,8 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const scrollControls = document.getElementById("scroll-controls");
   const teleprompter = document.getElementById("teleprompter");
 
-  // API base URL - point this to your VPS endpoint
-  const API_BASE_URL = "https://37.27.181.3/api/song-data;
+  // API base URL - pointing to your VPS
+  const API_BASE_URL = "http://37.27.181.3/api/song-data";
 
   loadButton.addEventListener("click", loadSong);
 
