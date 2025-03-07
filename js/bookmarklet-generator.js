@@ -1,19 +1,26 @@
 document.addEventListener("DOMContentLoaded", function () {
   const bookmarkletLink = document.getElementById("bookmarklet-link");
 
-  // Get the base URL for our site
+  // Get the base URL for our site - extract the path correctly
   const baseUrl = window.location.origin;
+  const pathSegments = window.location.pathname.split("/");
+  // Remove the last segment (index.html or empty string if at root)
+  pathSegments.pop();
+  const basePath = pathSegments.join("/");
 
-  // Create a tiny bookmarklet that just opens our extraction page
+  // Create the full URL to the extractor
+  const extractorUrl = `${baseUrl}${basePath}/extractor.html`;
+
+  // Create a tiny bookmarklet that just opens our extraction page with the correct path
   const bookmarkletCode = `javascript:(function(){
-    var url='${baseUrl}/extractor.html?url='+encodeURIComponent(window.location.href);
+    var url='${extractorUrl}?url='+encodeURIComponent(window.location.href);
     window.open(url,'MeatSmoothieExtractor','width=500,height=600');
   })();`;
 
   // Set the href attribute to the bookmarklet code
   bookmarkletLink.setAttribute("href", bookmarkletCode);
 
-  // Update the bookmarklet UI with better instructions
+  // Update the bookmarklet UI with the correct path in the explanation
   const container = document.querySelector(".bookmarklet-container");
   container.innerHTML = `
     <h3>The Easiest Way to Extract Songs</h3>
@@ -29,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <li>When viewing any song on Ultimate Guitar, click the bookmark</li>
         <li>In the popup window, click "Extract & Open in Teleprompter"</li>
       </ol>
+      <p><small>Extractor path: ${extractorUrl}</small></p>
     </div>
   `;
 
