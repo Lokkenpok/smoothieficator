@@ -8,12 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const scrollControls = document.getElementById("scroll-controls");
   const teleprompter = document.getElementById("teleprompter");
 
-  // List of CORS proxies to try
+  // List of CORS proxies to try, ordered by reliability
   const CORS_PROXIES = [
-    'https://cors-anywhere.herokuapp.com/',
+    'https://corsproxy.io/?',
     'https://api.allorigins.win/raw?url=',
     'https://api.codetabs.com/v1/proxy?quest=',
-    'https://corsproxy.io/?'
+    'https://cors-anywhere.herokuapp.com/'
   ];
 
   // Retry configuration
@@ -43,13 +43,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const proxyUrl = CORS_PROXIES[proxyIndex] + encodeURIComponent(url);
-      const response = await fetch(proxyUrl);
+      const response = await fetch(proxyUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      return await response.text();
+      const text = await response.text();
+      
+      // Verify we got actual HTML content
+      if (!text.includes('<!DOCTYPE html>') && !text.includes('<html')) {
+        throw new Error('Invalid response format');
+      }
+      
+      return text;
     } catch (error) {
       console.warn(`Proxy ${CORS_PROXIES[proxyIndex]} failed:`, error);
       // Try next proxy
@@ -68,11 +81,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Clear previous content safely
+    while (songContent.firstChild) {
+      songContent.removeChild(songContent.firstChild);
+    }
+
     // Show loading indicator
     loadingIndicator.classList.remove("hidden");
     errorLoad.classList.add("hidden");
     scrollControls.classList.add("hidden");
-    songContent.innerHTML = "";
 
     try {
       // For development/testing, check if we should use mock data
@@ -85,6 +102,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Try to fetch with proxy system
       const html = await fetchWithProxy(url);
       
+      if (!html) {
+        throw new Error("Failed to fetch content");
+      }
+
       // Extract title and artist from meta tags
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
@@ -103,26 +124,24 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("Could not extract song content from the page");
       }
 
-      displaySong({
-        title,
-        artist,
+      // Create song object
+      const song = {
+        title: decodeHTMLEntities(title),
+        artist: decodeHTMLEntities(artist),
         content,
         type: "chords"
-      });
+      };
+
+      // Display the song
+      displaySong(song);
       scrollControls.classList.remove("hidden");
-      
-      // Store successful proxy index in localStorage for future use
-      const successfulProxy = CORS_PROXIES.findIndex(proxy => html.includes(proxy));
-      if (successfulProxy !== -1) {
-        localStorage.setItem('lastSuccessfulProxy', successfulProxy.toString());
-      }
 
     } catch (error) {
       console.error("Error loading song:", error);
       if (error.message.includes('All proxies failed')) {
-        showError("All CORS proxies failed. Please try again later or try the example song (ID: 2272453)");
+        showError("Unable to load song. Please try again later or use the example song (ID: 2272453). If this persists, try a different song URL.");
       } else {
-        showError("Error loading song. Please try again or use the example song (ID: 2272453)");
+        showError(`Error loading song: ${error.message}. Please try again or use the example song (ID: 2272453).`);
       }
     } finally {
       loadingIndicator.classList.add("hidden");
@@ -134,9 +153,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
       
-      // Try to find the tab content in the page
-      const tabContentElement = doc.querySelector('.js-tab-content');
-      const tabContent = tabContentElement ? tabContentElement.textContent : '';
+      // Try different selectors for tab content
+      const selectors = [
+        '.js-tab-content',
+        '[data-content="tab"]',
+        '.tab-content',
+        '#cont'
+      ];
+
+      let tabContent = '';
+      for (const selector of selectors) {
+        const element = doc.querySelector(selector);
+        if (element) {
+          tabContent = element.textContent;
+          break;
+        }
+      }
       
       if (!tabContent) return null;
 
@@ -175,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cleanContent = cleanContent.replace(regex, '[');
       });
 
-      return cleanContent;
+      return cleanContent || null;
     } catch (e) {
       console.error("Error parsing HTML:", e);
       return null;
