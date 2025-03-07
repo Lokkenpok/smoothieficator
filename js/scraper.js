@@ -43,21 +43,47 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Use cors-anywhere as a fallback proxy
+      // Use multiple CORS proxies with different approaches
       const corsProxies = [
-        "https://api.allorigins.win/raw?url=",
-        "https://corsproxy.io/?",
-        "https://cors-anywhere.herokuapp.com/",
+        {
+          url: "https://api.allorigins.win/raw?url=",
+          transform: (url) => encodeURIComponent(url),
+        },
+        {
+          url: "https://corsproxy.io/?",
+          transform: (url) => encodeURIComponent(url),
+        },
+        {
+          url: "https://api.codetabs.com/v1/proxy?quest=",
+          transform: (url) => encodeURIComponent(url),
+        },
+        {
+          url: "https://cors.eu.org/",
+          transform: (url) => url,
+        },
+        {
+          url: "https://cors-proxy.htmldriven.com/?url=",
+          transform: (url) => encodeURIComponent(url),
+        },
       ];
 
       let songData = null;
-      let error = null;
+      let lastError = null;
 
-      // Try each proxy until one works
-      for (const proxyUrl of corsProxies) {
+      // Try each proxy with different fetch strategies
+      for (const proxy of corsProxies) {
+        if (songData) break;
+
         try {
-          const encodedUrl = encodeURIComponent(url);
-          const response = await fetch(proxyUrl + encodedUrl);
+          // Try fetch with default options
+          const response = await fetch(proxy.url + proxy.transform(url), {
+            headers: {
+              Accept:
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+              "Accept-Language": "en-US,en;q=0.5",
+              Referer: "https://www.ultimate-guitar.com/",
+            },
+          });
 
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -66,17 +92,41 @@ document.addEventListener("DOMContentLoaded", () => {
           const html = await response.text();
           songData = parseUltimateGuitarHtml(html, url);
 
-          if (songData) {
-            break; // Successfully got data, exit loop
+          if (!songData) {
+            // Try alternative content-type
+            const responseJson = await fetch(proxy.url + proxy.transform(url), {
+              headers: {
+                Accept: "application/json",
+                Referer: "https://www.ultimate-guitar.com/",
+              },
+            });
+
+            if (responseJson.ok) {
+              const jsonData = await responseJson.json();
+              const htmlContent =
+                jsonData.contents ||
+                jsonData.content ||
+                jsonData.data ||
+                jsonData;
+              if (typeof htmlContent === "string") {
+                songData = parseUltimateGuitarHtml(htmlContent, url);
+              }
+            }
           }
         } catch (e) {
-          error = e;
-          continue; // Try next proxy
+          console.warn(`Proxy ${proxy.url} failed:`, e);
+          lastError = e;
+          continue;
         }
       }
 
       if (!songData) {
-        throw error || new Error("Could not extract song data from the page");
+        throw (
+          lastError ||
+          new Error(
+            "Unable to load the song. Please try a different song or try again later."
+          )
+        );
       }
 
       // Display the formatted song
@@ -87,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error loading song:", error);
       showError(
-        `${error.message}. Try using the example song URL or visit https://cors-anywhere.herokuapp.com/corsdemo for temporary access.`
+        `${error.message}. Try using a different song URL or try again in a few minutes.`
       );
     } finally {
       loadingIndicator.classList.add("hidden");
