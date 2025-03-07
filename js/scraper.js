@@ -473,4 +473,67 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
 
     songContent.appendChild(savedSongsDiv);
   }
+
+  // Check URL parameters for incoming song data from bookmarklet
+  function checkForBookmarkletData() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const songData = urlParams.get("songData");
+
+    if (songData) {
+      try {
+        // Clear the URL parameters without refreshing the page
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+
+        // Parse the song data
+        const parsedData = JSON.parse(decodeURIComponent(songData));
+
+        // Display the song content
+        displaySongContent(parsedData);
+
+        // Show scroll controls
+        scrollControls.classList.remove("hidden");
+
+        return true;
+      } catch (error) {
+        console.error("Error processing bookmarklet data:", error);
+        errorLoad.textContent = "Error processing song data.";
+        errorLoad.classList.remove("hidden");
+      }
+    }
+    return false;
+  }
+
+  // Handle displaying song content from either source
+  function displaySongContent(data) {
+    // Build HTML content
+    let html = `<h1>${data.title} - ${data.artist}</h1>`;
+
+    // Format the content based on type
+    if (data.type === "Chords" || data.type === "Tabs") {
+      html += `<pre>${data.content}</pre>`;
+    } else {
+      // Convert newlines to <br> tags for lyrics
+      html += `<div>${data.content.replace(/\n/g, "<br>")}</div>`;
+    }
+
+    // Display in the teleprompter
+    songContent.innerHTML = html;
+
+    // Hide loading indicator if visible
+    loadingIndicator.classList.add("hidden");
+  }
+
+  // Check for bookmarklet data on page load
+  window.addEventListener("load", function () {
+    if (document.getElementById("app-container").classList.contains("hidden")) {
+      // Don't process if the user hasn't logged in yet
+      return;
+    }
+
+    checkForBookmarkletData();
+  });
 });

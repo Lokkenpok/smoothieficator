@@ -35,6 +35,17 @@
           />
           <button id="load-button">Load Song</button>
         </div>
+        <div class="bookmarklet-container">
+          <p>
+            Or use our
+            <a id="bookmarklet-link" href="#">Meat Smoothie Bookmarklet</a>
+            (drag to your bookmarks bar)
+          </p>
+          <p class="bookmarklet-instructions">
+            When viewing a song on Ultimate Guitar, click the bookmarklet to
+            send it to this teleprompter.
+          </p>
+        </div>
         <div class="control-group hidden" id="scroll-controls">
           <label for="scroll-speed">Scroll Speed:</label>
           <input type="range" id="scroll-speed" min="1" max="10" value="3" />
@@ -57,5 +68,6 @@
     <script src="js/auth.js"></script>
     <script src="js/scraper.js"></script>
     <script src="js/teleprompter.js"></script>
+    <script src="js/bookmarklet-generator.js"></script>
   </body>
 </html>
