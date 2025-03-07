@@ -1,18 +1,20 @@
 document.addEventListener("DOMContentLoaded", function () {
   // Tab functionality
   const tabButtons = document.querySelectorAll(".tab-button");
-  const tabContents = document.querySelectorAll(".tab-content");
 
   tabButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      // Remove active class from all buttons and hide all contents
+      // Remove active class from all buttons
       tabButtons.forEach((btn) => btn.classList.remove("active"));
-      tabContents.forEach((content) => content.classList.add("hidden"));
+
+      // Hide all content sections
+      document.getElementById("copy-paste-content").classList.add("hidden");
+      document.getElementById("manual-method-content").classList.add("hidden");
 
       // Add active class to clicked button and show corresponding content
       button.classList.add("active");
       const tabId = button.getAttribute("data-tab");
-      document.getElementById(tabId).classList.remove("hidden");
+      document.getElementById(tabId + "-content").classList.remove("hidden");
     });
   });
 

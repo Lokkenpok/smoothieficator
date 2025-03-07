@@ -118,6 +118,8 @@ button:hover {
 
 .controls-content {
   padding: 10px;
+  max-width: 800px; /* Limit width to be more compact */
+  margin: 0 auto; /* Center in the available space */
 }
 
 #toggle-controls {
@@ -429,12 +431,39 @@ button:hover {
   background-color: #2a2a2a;
   border-radius: 5px;
   border: 1px solid #444;
+  max-width: 100%; /* Ensure it fits in parent */
 }
 
-.extract-tool-container h3 {
-  color: #ff6b6b;
-  margin-bottom: 10px;
-  font-size: 1rem;
+/* More compact extraction tool */
+.extract-tool-container.compact {
+  padding: 10px;
+  margin: 5px 0;
+}
+
+.extract-tool-container.compact h3 {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.extract-tool-container.compact .tabs {
+  margin-bottom: 8px;
+}
+
+.extract-tool-container.compact .tab-button {
+  padding: 3px 8px;
+  font-size: 0.8rem;
+}
+
+.extract-tool-container.compact .tab-content {
+  padding: 8px;
+}
+
+.extract-tool-container.compact .form-group {
+  margin-bottom: 6px;
+}
+
+.extract-tool-container.compact textarea {
+  min-height: 70px;
 }
 
 .tabs {
@@ -494,6 +523,14 @@ kbd {
   cursor: pointer;
   width: 100%;
   margin-top: 10px;
+}
+
+.primary-button.compact-button {
+  width: auto;
+  display: inline-block;
+  margin: 0; /* Remove margin since it's handled by button-row */
+  min-width: 180px;
+  max-width: none;
 }
 
 .primary-button:hover {
@@ -594,8 +631,9 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 10px;
+  padding: 8px 15px; /* Increased padding for more breathing room */
   cursor: pointer;
+  min-height: 40px; /* Ensure consistent height */
 }
 
 .compact-controls-header h1 {
@@ -642,4 +680,26 @@ kbd {
   font-weight: bold;
   min-width: 15px;
   text-align: center;
+}
+
+/* Button row for better organization */
+.button-row {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+/* Updated tab system with simpler structure */
+#copy-paste-content,
+#manual-method-content {
+  padding: 10px;
+  background-color: #333;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+#manual-method-content {
+  padding-top: 15px;
 }

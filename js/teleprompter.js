@@ -31,6 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Controls state
   let controlsCollapsed = false;
 
+  // Song navigation state
+  let savedSongs = [];
+  let currentSongIndex = -1;
+
   // Initialize scroll controls
   startScrollBtn.addEventListener("click", startScrolling);
   stopScrollBtn.addEventListener("click", stopScrolling);
@@ -106,6 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!controlsCollapsed) {
       toggleControls();
     }
+
+    loadSavedSongs(); // Update the saved songs array and current index
   });
 
   function startScrolling() {
@@ -213,6 +219,63 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Load saved songs
+  function loadSavedSongs() {
+    const localSongs = JSON.parse(localStorage.getItem("savedSongs") || "{}");
+    savedSongs = Object.values(localSongs);
+    // If a song is currently displayed, find its index
+    const currentTitle = document.querySelector(".song-header h2")?.textContent;
+    const currentArtist = document
+      .querySelector(".song-header h3")
+      ?.textContent?.replace("by ", "")
+      .trim();
+
+    if (currentTitle && currentArtist) {
+      currentSongIndex = savedSongs.findIndex(
+        (song) => song.title === currentTitle && song.artist === currentArtist
+      );
+    }
+  }
+
+  // Navigate to previous song
+  function goToPreviousSong() {
+    if (savedSongs.length === 0) {
+      loadSavedSongs();
+      if (savedSongs.length === 0) return; // No songs saved
+    }
+
+    if (currentSongIndex <= 0) {
+      currentSongIndex = savedSongs.length - 1; // Wrap around to the last song
+    } else {
+      currentSongIndex--;
+    }
+
+    displaySong(savedSongs[currentSongIndex]);
+  }
+
+  // Navigate to next song
+  function goToNextSong() {
+    if (savedSongs.length === 0) {
+      loadSavedSongs();
+      if (savedSongs.length === 0) return; // No songs saved
+    }
+
+    if (currentSongIndex >= savedSongs.length - 1 || currentSongIndex === -1) {
+      currentSongIndex = 0; // Wrap around to the first song
+    } else {
+      currentSongIndex++;
+    }
+
+    displaySong(savedSongs[currentSongIndex]);
+  }
+
+  // Display song (reuse the function from scraper.js)
+  function displaySong(song) {
+    if (typeof window.processSongFromBookmarklet === "function") {
+      window.processSongFromBookmarklet(song);
+    }
+  }
+
   // Handle keyboard controls
   function handleKeyDown(e) {
     // Don't capture key events when typing in input fields
@@ -296,6 +359,30 @@ document.addEventListener("DOMContentLoaded", () => {
             stopScrolling();
             startScrolling();
           }
+        }
+        break;
+
+      case "ArrowLeft":
+        e.preventDefault();
+        // Navigate to previous song if we're in teleprompter view (not editing)
+        if (
+          document
+            .getElementById("song-content")
+            .contains(document.querySelector(".song-header"))
+        ) {
+          goToPreviousSong();
+        }
+        break;
+
+      case "ArrowRight":
+        e.preventDefault();
+        // Navigate to next song if we're in teleprompter view (not editing)
+        if (
+          document
+            .getElementById("song-content")
+            .contains(document.querySelector(".song-header"))
+        ) {
+          goToNextSong();
         }
         break;
     }

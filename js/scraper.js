@@ -128,11 +128,44 @@ document.addEventListener("DOMContentLoaded", () => {
   // Add a button to manage saved songs
   const controlsDiv = document.querySelector(".controls-content");
   if (controlsDiv) {
-    const manageSongsButton = document.createElement("button");
-    manageSongsButton.textContent = "Manage Saved Songs";
-    manageSongsButton.classList.add("manage-songs-button");
-    manageSongsButton.addEventListener("click", showSavedSongs);
-    controlsDiv.appendChild(manageSongsButton);
+    // Find the extract container to add the button there
+    const extractContainer = document.querySelector(".extract-tool-container");
+
+    if (extractContainer) {
+      // Create a button row div to hold both buttons
+      const buttonRow = document.createElement("div");
+      buttonRow.classList.add("button-row");
+
+      // Move the extract button into the button row (if it exists)
+      const existingExtractBtn =
+        extractContainer.querySelector("#extract-button");
+      if (existingExtractBtn) {
+        buttonRow.appendChild(existingExtractBtn.cloneNode(true));
+        existingExtractBtn.remove();
+      }
+
+      // Add the manage songs button
+      const manageSongsButton = document.createElement("button");
+      manageSongsButton.textContent = "Manage Saved Songs";
+      manageSongsButton.classList.add("primary-button", "compact-button");
+      manageSongsButton.addEventListener("click", showSavedSongs);
+      buttonRow.appendChild(manageSongsButton);
+
+      // Add the button row after the tabs
+      const tabsContainer = extractContainer.querySelector(".tabs");
+      if (tabsContainer && tabsContainer.nextElementSibling) {
+        tabsContainer.nextElementSibling.after(buttonRow);
+      } else {
+        extractContainer.appendChild(buttonRow);
+      }
+    } else {
+      // Fallback to original approach if extract container not found
+      const manageSongsButton = document.createElement("button");
+      manageSongsButton.textContent = "Manage Saved Songs";
+      manageSongsButton.classList.add("manage-songs-button");
+      manageSongsButton.addEventListener("click", showSavedSongs);
+      controlsDiv.appendChild(manageSongsButton);
+    }
   }
 
   // Function to display and manage saved songs
