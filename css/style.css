@@ -186,6 +186,95 @@ button:hover {
   color: #ff6b6b;
 }
 
+/* Manual instructions styling */
+.manual-instructions {
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.manual-instructions h3 {
+  color: #ff6b6b;
+  margin-bottom: 1rem;
+}
+
+.manual-instructions ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.manual-instructions li {
+  margin-bottom: 0.5rem;
+}
+
+.code-block {
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-family: monospace;
+  margin: 1rem 0;
+  border-left: 3px solid #ff6b6b;
+}
+
+/* Saved songs styling */
+.saved-songs {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.saved-songs h2 {
+  color: #ff6b6b;
+  margin-bottom: 1.5rem;
+}
+
+.songs-list {
+  list-style: none;
+  padding: 0;
+}
+
+.songs-list li {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem;
+  border-bottom: 1px solid #333;
+  gap: 1rem;
+}
+
+.songs-list li:last-child {
+  border-bottom: none;
+}
+
+.songs-list li span {
+  flex: 1;
+  font-size: 1.1rem;
+}
+
+.songs-list button {
+  padding: 0.4rem 0.8rem;
+}
+
+.delete-button {
+  background-color: #e74c3c;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+}
+
+.manage-songs-button {
+  margin-top: 1rem;
+  background-color: #3498db;
+}
+
+.manage-songs-button:hover {
+  background-color: #2980b9;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   #song-content {

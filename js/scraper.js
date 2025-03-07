@@ -8,17 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const scrollControls = document.getElementById("scroll-controls");
   const teleprompter = document.getElementById("teleprompter");
 
-  // List of CORS proxies to try, ordered by reliability
-  const CORS_PROXIES = [
-    'https://corsproxy.io/?',
-    'https://api.allorigins.win/raw?url=',
-    'https://api.codetabs.com/v1/proxy?quest=',
-    'https://cors-anywhere.herokuapp.com/'
-  ];
-
-  // Retry configuration
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY = 1000; // 1 second
+  // Initialize local storage for saved songs
+  const localSongs = JSON.parse(localStorage.getItem("savedSongs") || "{}");
 
   loadButton.addEventListener("click", loadSong);
   songUrlInput.addEventListener("keypress", (e) => {
@@ -26,49 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
       loadSong();
     }
   });
-
-  // Sleep function for delays between retries
-  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-  // Function to try different proxies
-  async function fetchWithProxy(url, proxyIndex = 0, retryCount = 0) {
-    if (proxyIndex >= CORS_PROXIES.length) {
-      if (retryCount < MAX_RETRIES) {
-        // If we've tried all proxies, wait and start over
-        await sleep(RETRY_DELAY);
-        return fetchWithProxy(url, 0, retryCount + 1);
-      }
-      throw new Error("All proxies failed");
-    }
-
-    try {
-      const proxyUrl = CORS_PROXIES[proxyIndex] + encodeURIComponent(url);
-      const response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/html,application/xhtml+xml,application/xml',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const text = await response.text();
-      
-      // Verify we got actual HTML content
-      if (!text.includes('<!DOCTYPE html>') && !text.includes('<html')) {
-        throw new Error('Invalid response format');
-      }
-      
-      return text;
-    } catch (error) {
-      console.warn(`Proxy ${CORS_PROXIES[proxyIndex]} failed:`, error);
-      // Try next proxy
-      return fetchWithProxy(url, proxyIndex + 1, retryCount);
-    }
-  }
 
   async function loadSong() {
     const url = songUrlInput.value.trim();
@@ -99,204 +47,146 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Try to fetch with proxy system
-      const html = await fetchWithProxy(url);
-      
-      if (!html) {
-        throw new Error("Failed to fetch content");
+      // Check if song is in local storage first
+      if (localSongs[url]) {
+        console.log("Loading song from local storage");
+        displaySong(localSongs[url]);
+        scrollControls.classList.remove("hidden");
+        return;
       }
 
-      // Extract title and artist from meta tags
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      
-      let title = doc.querySelector('meta[property="og:title"]')?.content || '';
-      let artist = doc.querySelector('meta[property="og:description"]')?.content || '';
-      
-      // Clean up title and artist
-      title = title.split(' by ')[0] || extractTitleFromUrl(url);
-      artist = artist.split(' - ')[0] || "Unknown Artist";
-      
-      // Parse the content
-      const content = parseUltimateGuitarHtml(html);
-      
-      if (!content) {
-        throw new Error("Could not extract song content from the page");
+      // Extract the song ID from the URL
+      const songId = extractSongIdFromUrl(url);
+      if (!songId) {
+        throw new Error("Could not extract song ID from URL");
       }
-
-      // Create song object
-      const song = {
-        title: decodeHTMLEntities(title),
-        artist: decodeHTMLEntities(artist),
-        content,
-        type: "chords"
-      };
-
-      // Display the song
-      displaySong(song);
-      scrollControls.classList.remove("hidden");
-
+      
+      // Use the user to manually open the tab page and copy the store data
+      showManualInstructions(songId);
+      
     } catch (error) {
       console.error("Error loading song:", error);
-      if (error.message.includes('All proxies failed')) {
-        showError("Unable to load song. Please try again later or use the example song (ID: 2272453). If this persists, try a different song URL.");
-      } else {
-        showError(`Error loading song: ${error.message}. Please try again or use the example song (ID: 2272453).`);
-      }
+      showError(error.message);
     } finally {
       loadingIndicator.classList.add("hidden");
     }
   }
 
-  function parseUltimateGuitarHtml(html) {
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
+  // Function to show instructions for manual data extraction
+  function showManualInstructions(songId) {
+    // Hide loading indicator
+    loadingIndicator.classList.add("hidden");
+    
+    // Clear song content
+    songContent.innerHTML = "";
+    
+    // Create instructions
+    const instructionsDiv = document.createElement("div");
+    instructionsDiv.classList.add("manual-instructions");
+    instructionsDiv.innerHTML = `
+      <h3>One-time Setup (Due to CORS limitations)</h3>
+      <ol>
+        <li>Open the Ultimate Guitar tab in a new tab</li>
+        <li>Press F12 to open developer tools</li>
+        <li>Click on the "Console" tab</li>
+        <li>Copy and paste the following code into the console and press Enter:</li>
+      </ol>
       
-      // Try different selectors for tab content
-      const selectors = [
-        '.js-tab-content',
-        '[data-content="tab"]',
-        '.tab-content',
-        '#cont'
-      ];
-
-      let tabContent = '';
-      for (const selector of selectors) {
-        const element = doc.querySelector(selector);
-        if (element) {
-          tabContent = element.textContent;
-          break;
+      <pre class="code-block">
+copy(JSON.stringify({
+  title: document.querySelector('h1')?.textContent || "Unknown Song",
+  artist: document.querySelector('div[class*="artist"]')?.textContent || "Unknown Artist",
+  content: window.UGAPP.store.page.data?.tab?.content || ""
+}))
+      </pre>
+      
+      <p>This will copy the song data to your clipboard.</p>
+      
+      <h3>After copying:</h3>
+      <ol>
+        <li>Return to this page</li>
+        <li>Click the button below</li>
+        <li>Paste the copied data into the prompt box that appears</li>
+      </ol>
+      
+      <button id="paste-data-button" class="button">Paste Song Data</button>
+    `;
+    
+    songContent.appendChild(instructionsDiv);
+    
+    // Add event listener for paste button
+    document.getElementById("paste-data-button").addEventListener("click", () => {
+      const songData = prompt("Paste the copied song data here:");
+      if (songData) {
+        try {
+          const parsedData = JSON.parse(songData);
+          if (parsedData.title && parsedData.content) {
+            processSongData(parsedData, songUrlInput.value);
+          } else {
+            showError("Invalid song data format. Please try again.");
+          }
+        } catch (e) {
+          showError("Could not parse song data. Please try again.");
         }
       }
-      
-      if (!tabContent) return null;
-
-      // Clean up the content
-      let cleanContent = tabContent
-        // Remove tab characters and multiple spaces
-        .replace(/\t/g, '')
-        .replace(/\s+/g, ' ')
-        // Clean up line endings
-        .replace(/\r\n/g, '\n')
-        .replace(/\r/g, '\n')
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => {
-          // Keep only lines that:
-          // 1. Start with a section marker [Verse], [Chorus], etc.
-          // 2. Contain chords [ch]
-          // 3. Contain actual lyrics (non-empty lines that don't start with [ and aren't just whitespace)
-          return line.startsWith('[') || 
-                 line.includes('[ch]') || 
-                 (line && !line.startsWith('[') && !/^\s*$/.test(line));
-        })
-        .join('\n');
-
-      // Remove any non-essential sections
-      const unwantedSections = [
-        /\[tab\][\s\S]*?\[\/tab\]/gi,
-        /\[Song Info\][\s\S]*?\n\[/g,
-        /\[Basic Chord Structure\][\s\S]*?\n\[/g,
-        /\[Note\][\s\S]*?\n\[/g,
-        /\[Common Chord Progressions\][\s\S]*?\n\[/g,
-        /\[Tips\][\s\S]*?\n\[/g
-      ];
-
-      unwantedSections.forEach(regex => {
-        cleanContent = cleanContent.replace(regex, '[');
-      });
-
-      return cleanContent || null;
-    } catch (e) {
-      console.error("Error parsing HTML:", e);
-      return null;
-    }
+    });
   }
 
-  function parseUltimateGuitarUrl(url) {
-    try {
-      // Extract the tab ID and song info from the URL
-      const urlParts = url.split("/");
-      const tabPart = urlParts[urlParts.length - 1];
-      const songParts = tabPart.split("-");
+  // Process the pasted song data
+  function processSongData(songData, url) {
+    // Process content for chords if needed
+    let processedContent = songData.content;
+    
+    // If content doesn't have [ch] tags, process the chords
+    if (!processedContent.includes("[ch]")) {
+      processedContent = processChords(processedContent);
+    }
+    
+    // Create song object
+    const song = {
+      title: songData.title,
+      artist: songData.artist,
+      content: processedContent,
+      type: "chords"
+    };
+    
+    // Save to local storage
+    localSongs[url] = song;
+    localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+    
+    // Display the song
+    displaySong(song);
+    scrollControls.classList.remove("hidden");
+  }
 
-      // The last part is usually the tab ID
-      const tabId = songParts.pop();
-
-      // Remove common suffixes and join the remaining parts
-      const titleParts = [];
-      const artistParts = [];
-      let foundBy = false;
-
-      for (const part of songParts) {
-        if (
-          part === "by" ||
-          part === "chords" ||
-          part === "tab" ||
-          part === "tabs"
-        ) {
-          foundBy = true;
-          continue;
-        }
-        if (!foundBy) {
-          titleParts.push(part);
-        } else {
-          artistParts.push(part);
-        }
+  // Process text to add chord tags
+  function processChords(text) {
+    // First split into lines
+    const lines = text.split("\n");
+    const processedLines = [];
+    
+    // Process each line
+    for (const line of lines) {
+      // If line starts with a section marker, keep as is
+      if (line.trim().startsWith("[") && line.trim().includes("]")) {
+        processedLines.push(line);
+        continue;
       }
-
-      // Clean up the title and artist
-      const title = titleParts
-        .join(" ")
-        .replace(/-/g, " ")
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-
-      const artist = artistParts
-        .join(" ")
-        .replace(/-/g, " ")
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-
-      // Generate a basic chord structure based on the title
-      // This is a fallback when we can't fetch the actual tab
-      const content = generateBasicChordStructure(title, artist);
-
-      return {
-        title,
-        artist: artist || "Unknown Artist",
-        content,
-      };
-    } catch (e) {
-      console.error("Error parsing URL:", e);
-      return null;
+      
+      // Look for common chord patterns
+      const chordsRegex = /\b([A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(?:\([^)]*\))?)\b/g;
+      let processedLine = line.replace(chordsRegex, "[ch]$1[/ch]");
+      
+      processedLines.push(processedLine);
     }
+    
+    return processedLines.join("\n");
   }
 
-  function generateBasicChordStructure(title, artist) {
-    return `[Song Info]
-Title: ${title}
-Artist: ${artist}
-
-[Basic Chord Structure]
-[ch]C[/ch]    [ch]G[/ch]    [ch]Am[/ch]    [ch]F[/ch]
-
-[Note]
-This is a basic chord structure.
-For the full tab, please visit Ultimate Guitar's website directly.
-
-[Common Chord Progressions]
-1. [ch]C[/ch]    [ch]G[/ch]    [ch]Am[/ch]    [ch]F[/ch]
-2. [ch]Am[/ch]    [ch]F[/ch]    [ch]C[/ch]    [ch]G[/ch]
-3. [ch]C[/ch]    [ch]Am[/ch]    [ch]F[/ch]    [ch]G[/ch]
-
-[Tips]
-- Try these basic chord progressions
-- Adjust the tempo to match the song
-- Experiment with different strumming patterns`;
+  // Extract song ID from a Ultimate Guitar URL
+  function extractSongIdFromUrl(url) {
+    const matches = url.match(/\-(\d+)$/) || url.match(/\/(\d+)$/);
+    return matches ? matches[1] : null;
   }
 
   function decodeHTMLEntities(text) {
@@ -446,5 +336,72 @@ For the full tab, please visit Ultimate Guitar's website directly.
 
     // Dispatch event that song has loaded
     window.dispatchEvent(new CustomEvent("songLoaded"));
+  }
+
+  // Add a button to manage saved songs
+  const controlsDiv = document.getElementById("controls");
+  const manageSongsButton = document.createElement("button");
+  manageSongsButton.textContent = "Manage Saved Songs";
+  manageSongsButton.classList.add("manage-songs-button");
+  manageSongsButton.addEventListener("click", showSavedSongs);
+  controlsDiv.appendChild(manageSongsButton);
+
+  // Function to display and manage saved songs
+  function showSavedSongs() {
+    // Clear song content
+    songContent.innerHTML = "";
+    
+    // Create saved songs UI
+    const savedSongsDiv = document.createElement("div");
+    savedSongsDiv.classList.add("saved-songs");
+    
+    const savedSongsHeader = document.createElement("h2");
+    savedSongsHeader.textContent = "Your Saved Songs";
+    savedSongsDiv.appendChild(savedSongsHeader);
+    
+    const songsList = document.createElement("ul");
+    songsList.classList.add("songs-list");
+    
+    const savedSongsEntries = Object.entries(localSongs);
+    
+    if (savedSongsEntries.length === 0) {
+      const noSongs = document.createElement("p");
+      noSongs.textContent = "No songs saved yet. Load a song to save it automatically.";
+      savedSongsDiv.appendChild(noSongs);
+    } else {
+      savedSongsEntries.forEach(([url, song]) => {
+        const songItem = document.createElement("li");
+        
+        const songTitle = document.createElement("span");
+        songTitle.textContent = `${song.title} - ${song.artist}`;
+        songItem.appendChild(songTitle);
+        
+        const loadButton = document.createElement("button");
+        loadButton.textContent = "Load";
+        loadButton.addEventListener("click", () => {
+          displaySong(song);
+          scrollControls.classList.remove("hidden");
+        });
+        songItem.appendChild(loadButton);
+        
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.classList.add("delete-button");
+        deleteButton.addEventListener("click", () => {
+          if (confirm(`Delete "${song.title}" from saved songs?`)) {
+            delete localSongs[url];
+            localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+            showSavedSongs(); // Refresh the list
+          }
+        });
+        songItem.appendChild(deleteButton);
+        
+        songsList.appendChild(songItem);
+      });
+      
+      savedSongsDiv.appendChild(songsList);
+    }
+    
+    songContent.appendChild(savedSongsDiv);
   }
 });
