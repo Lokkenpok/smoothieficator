@@ -60,10 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!songId) {
         throw new Error("Could not extract song ID from URL");
       }
-      
+
       // Use the user to manually open the tab page and copy the store data
       showManualInstructions(songId);
-      
     } catch (error) {
       console.error("Error loading song:", error);
       showError(error.message);
@@ -76,10 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function showManualInstructions(songId) {
     // Hide loading indicator
     loadingIndicator.classList.add("hidden");
-    
+
     // Clear song content
     songContent.innerHTML = "";
-    
+
     // Create instructions
     const instructionsDiv = document.createElement("div");
     instructionsDiv.classList.add("manual-instructions");
@@ -111,49 +110,51 @@ copy(JSON.stringify({
       
       <button id="paste-data-button" class="button">Paste Song Data</button>
     `;
-    
+
     songContent.appendChild(instructionsDiv);
-    
+
     // Add event listener for paste button
-    document.getElementById("paste-data-button").addEventListener("click", () => {
-      const songData = prompt("Paste the copied song data here:");
-      if (songData) {
-        try {
-          const parsedData = JSON.parse(songData);
-          if (parsedData.title && parsedData.content) {
-            processSongData(parsedData, songUrlInput.value);
-          } else {
-            showError("Invalid song data format. Please try again.");
+    document
+      .getElementById("paste-data-button")
+      .addEventListener("click", () => {
+        const songData = prompt("Paste the copied song data here:");
+        if (songData) {
+          try {
+            const parsedData = JSON.parse(songData);
+            if (parsedData.title && parsedData.content) {
+              processSongData(parsedData, songUrlInput.value);
+            } else {
+              showError("Invalid song data format. Please try again.");
+            }
+          } catch (e) {
+            showError("Could not parse song data. Please try again.");
           }
-        } catch (e) {
-          showError("Could not parse song data. Please try again.");
         }
-      }
-    });
+      });
   }
 
   // Process the pasted song data
   function processSongData(songData, url) {
     // Process content for chords if needed
     let processedContent = songData.content;
-    
+
     // If content doesn't have [ch] tags, process the chords
     if (!processedContent.includes("[ch]")) {
       processedContent = processChords(processedContent);
     }
-    
+
     // Create song object
     const song = {
       title: songData.title,
       artist: songData.artist,
       content: processedContent,
-      type: "chords"
+      type: "chords",
     };
-    
+
     // Save to local storage
     localSongs[url] = song;
     localStorage.setItem("savedSongs", JSON.stringify(localSongs));
-    
+
     // Display the song
     displaySong(song);
     scrollControls.classList.remove("hidden");
@@ -164,7 +165,7 @@ copy(JSON.stringify({
     // First split into lines
     const lines = text.split("\n");
     const processedLines = [];
-    
+
     // Process each line
     for (const line of lines) {
       // If line starts with a section marker, keep as is
@@ -172,14 +173,15 @@ copy(JSON.stringify({
         processedLines.push(line);
         continue;
       }
-      
+
       // Look for common chord patterns
-      const chordsRegex = /\b([A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(?:\([^)]*\))?)\b/g;
+      const chordsRegex =
+        /\b([A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(?:\([^)]*\))?)\b/g;
       let processedLine = line.replace(chordsRegex, "[ch]$1[/ch]");
-      
+
       processedLines.push(processedLine);
     }
-    
+
     return processedLines.join("\n");
   }
 
@@ -350,32 +352,33 @@ copy(JSON.stringify({
   function showSavedSongs() {
     // Clear song content
     songContent.innerHTML = "";
-    
+
     // Create saved songs UI
     const savedSongsDiv = document.createElement("div");
     savedSongsDiv.classList.add("saved-songs");
-    
+
     const savedSongsHeader = document.createElement("h2");
     savedSongsHeader.textContent = "Your Saved Songs";
     savedSongsDiv.appendChild(savedSongsHeader);
-    
+
     const songsList = document.createElement("ul");
     songsList.classList.add("songs-list");
-    
+
     const savedSongsEntries = Object.entries(localSongs);
-    
+
     if (savedSongsEntries.length === 0) {
       const noSongs = document.createElement("p");
-      noSongs.textContent = "No songs saved yet. Load a song to save it automatically.";
+      noSongs.textContent =
+        "No songs saved yet. Load a song to save it automatically.";
       savedSongsDiv.appendChild(noSongs);
     } else {
       savedSongsEntries.forEach(([url, song]) => {
         const songItem = document.createElement("li");
-        
+
         const songTitle = document.createElement("span");
         songTitle.textContent = `${song.title} - ${song.artist}`;
         songItem.appendChild(songTitle);
-        
+
         const loadButton = document.createElement("button");
         loadButton.textContent = "Load";
         loadButton.addEventListener("click", () => {
@@ -383,7 +386,7 @@ copy(JSON.stringify({
           scrollControls.classList.remove("hidden");
         });
         songItem.appendChild(loadButton);
-        
+
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
         deleteButton.classList.add("delete-button");
@@ -395,13 +398,13 @@ copy(JSON.stringify({
           }
         });
         songItem.appendChild(deleteButton);
-        
+
         songsList.appendChild(songItem);
       });
-      
+
       savedSongsDiv.appendChild(songsList);
     }
-    
+
     songContent.appendChild(savedSongsDiv);
   }
 });
