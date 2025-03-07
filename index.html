@@ -26,89 +26,109 @@
     </div>
     <div id="app-container" class="hidden">
       <div id="controls">
-        <h1>Meat Smoothie Teleprompter</h1>
-        <div class="extract-tool-container">
-          <h3>Song Extraction</h3>
-          <div class="tabs">
-            <button class="tab-button active" data-tab="copy-paste">
-              Copy-Paste Method
-            </button>
-            <button class="tab-button" data-tab="manual-method">
-              Manual Input
-            </button>
-          </div>
-          <div class="tab-content" id="copy-paste">
-            <ol>
-              <li>Go to the Ultimate Guitar song page</li>
-              <li>Press <kbd>Ctrl+A</kbd> to select all content</li>
-              <li>Press <kbd>Ctrl+C</kbd> to copy</li>
-              <li>Click the button below and paste with <kbd>Ctrl+V</kbd></li>
-            </ol>
-            <button id="extract-button" class="primary-button">
-              Extract Song from Clipboard
-            </button>
-          </div>
-          <div class="tab-content hidden" id="manual-method">
-            <div class="form-group">
-              <label for="song-title">Song Title:</label>
-              <input
-                type="text"
-                id="song-title"
-                placeholder="Enter song title"
-              />
-            </div>
-            <div class="form-group">
-              <label for="song-artist">Artist:</label>
-              <input
-                type="text"
-                id="song-artist"
-                placeholder="Enter artist name"
-              />
-            </div>
-            <div class="form-group">
-              <label for="song-content-input"
-                >Song Content (Chords & Lyrics):</label
-              >
-              <textarea
-                id="song-content-input"
-                rows="6"
-                placeholder="Paste chords and lyrics here"
-              ></textarea>
-            </div>
-            <button id="manual-extract-button" class="primary-button">
-              Create Song
-            </button>
-          </div>
+        <div class="compact-controls-header">
+          <h1>Meat Smoothie Teleprompter</h1>
+          <button id="toggle-controls">Show Controls</button>
         </div>
-        <div class="control-group hidden" id="scroll-controls">
-          <h3>Teleprompter Controls</h3>
-          <div class="scroll-speed-container">
-            <label for="scroll-speed">Scroll Speed:</label>
-            <input type="range" id="scroll-speed" min="1" max="10" value="3" />
-            <span class="speed-value">3</span>
+        <div class="controls-content">
+          <div class="extract-tool-container">
+            <h3>Song Extraction</h3>
+            <div class="tabs">
+              <button class="tab-button active" data-tab="copy-paste">
+                Copy-Paste Method
+              </button>
+              <button class="tab-button" data-tab="manual-method">
+                Manual Input
+              </button>
+            </div>
+            <div class="tab-content" id="copy-paste">
+              <ol>
+                <li>Go to the Ultimate Guitar song page</li>
+                <li>Press <kbd>Ctrl+A</kbd> to select all content</li>
+                <li>Press <kbd>Ctrl+C</kbd> to copy</li>
+                <li>Click the button below and paste with <kbd>Ctrl+V</kbd></li>
+              </ol>
+              <button id="extract-button" class="primary-button">
+                Extract Song from Clipboard
+              </button>
+            </div>
+            <div class="tab-content hidden" id="manual-method">
+              <div class="form-group">
+                <label for="song-title">Song Title:</label>
+                <input
+                  type="text"
+                  id="song-title"
+                  placeholder="Enter song title"
+                />
+              </div>
+              <div class="form-group">
+                <label for="song-artist">Artist:</label>
+                <input
+                  type="text"
+                  id="song-artist"
+                  placeholder="Enter artist name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="song-content-input"
+                  >Song Content (Chords & Lyrics):</label
+                >
+                <textarea
+                  id="song-content-input"
+                  rows="6"
+                  placeholder="Paste chords and lyrics here"
+                ></textarea>
+              </div>
+              <button id="manual-extract-button" class="primary-button">
+                Create Song
+              </button>
+            </div>
           </div>
-          <div class="scroll-buttons">
-            <button id="start-scroll">Start Scrolling</button>
-            <button id="stop-scroll" class="hidden">Stop Scrolling</button>
-            <button id="reset-scroll">Reset</button>
-            <button id="toggle-fullscreen">Fullscreen</button>
+          <div class="control-group hidden" id="scroll-controls">
+            <h3>Teleprompter Controls</h3>
+            <div class="scroll-speed-container">
+              <label for="scroll-speed">Scroll Speed:</label>
+              <input
+                type="range"
+                id="scroll-speed"
+                min="1"
+                max="10"
+                value="3"
+              />
+              <span class="speed-value">3</span>
+            </div>
+            <div class="scroll-buttons">
+              <button id="start-scroll">Start Scrolling</button>
+              <button id="stop-scroll" class="hidden">Stop Scrolling</button>
+              <button id="reset-scroll">Reset</button>
+              <button id="toggle-fullscreen">Fullscreen</button>
+            </div>
+            <div class="keyboard-shortcuts">
+              <h4>Keyboard Shortcuts:</h4>
+              <ul>
+                <li><kbd>Space</kbd> - Start/Stop scrolling</li>
+                <li><kbd>↑</kbd><kbd>↓</kbd> - Manual scroll</li>
+                <li><kbd>Home</kbd> - Reset to top</li>
+                <li><kbd>F</kbd> - Toggle fullscreen</li>
+                <li><kbd>1</kbd>-<kbd>9</kbd> - Adjust speed</li>
+              </ul>
+            </div>
           </div>
-          <div class="keyboard-shortcuts">
-            <h4>Keyboard Shortcuts:</h4>
-            <ul>
-              <li><kbd>Space</kbd> - Start/Stop scrolling</li>
-              <li><kbd>↑</kbd><kbd>↓</kbd> - Manual scroll</li>
-              <li><kbd>Home</kbd> - Reset to top</li>
-              <li><kbd>F</kbd> - Toggle fullscreen</li>
-              <li><kbd>1</kbd>-<kbd>9</kbd> - Adjust speed</li>
-            </ul>
+          <div id="loading-indicator" class="hidden">Loading song...</div>
+          <div id="error-load" class="hidden">
+            Error loading song. Please check the URL.
           </div>
-        </div>
-        <div id="loading-indicator" class="hidden">Loading song...</div>
-        <div id="error-load" class="hidden">
-          Error loading song. Please check the URL.
         </div>
       </div>
+
+      <!-- Mini floating controls for when main controls are collapsed -->
+      <div id="mini-controls">
+        <button id="mini-start-scroll">Start</button>
+        <button id="mini-stop-scroll" class="hidden">Stop</button>
+        <button id="mini-reset-scroll">Reset</button>
+        <button id="mini-toggle-fullscreen">Full</button>
+      </div>
+
       <div id="teleprompter">
         <div id="song-content"></div>
       </div>

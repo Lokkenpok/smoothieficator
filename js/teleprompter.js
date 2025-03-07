@@ -9,17 +9,51 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleFullscreenBtn = document.getElementById("toggle-fullscreen");
   const appContainer = document.getElementById("app-container");
   const speedValueDisplay = document.querySelector(".speed-value");
+  const controls = document.getElementById("controls");
+  const toggleControlsBtn = document.getElementById("toggle-controls");
+
+  // Mini controls
+  const miniControls = document.getElementById("mini-controls");
+  const miniStartScrollBtn = document.getElementById("mini-start-scroll");
+  const miniStopScrollBtn = document.getElementById("mini-stop-scroll");
+  const miniResetScrollBtn = document.getElementById("mini-reset-scroll");
+  const miniToggleFullscreenBtn = document.getElementById(
+    "mini-toggle-fullscreen"
+  );
 
   // Scroll state
   let isScrolling = false;
   let scrollInterval = null;
   const baseScrollSpeed = 1; // Base pixels per interval
 
+  // Controls state
+  let controlsCollapsed = false;
+
   // Initialize scroll controls
   startScrollBtn.addEventListener("click", startScrolling);
   stopScrollBtn.addEventListener("click", stopScrolling);
   resetScrollBtn.addEventListener("click", resetScroll);
   toggleFullscreenBtn.addEventListener("click", toggleFullscreen);
+
+  // Mini controls
+  miniStartScrollBtn.addEventListener("click", startScrolling);
+  miniStopScrollBtn.addEventListener("click", stopScrolling);
+  miniResetScrollBtn.addEventListener("click", resetScroll);
+  miniToggleFullscreenBtn.addEventListener("click", toggleFullscreen);
+
+  // Toggle controls visibility
+  toggleControlsBtn.addEventListener("click", toggleControls);
+
+  // Also toggle when clicking the header
+  const compactHeader = document.querySelector(".compact-controls-header");
+  if (compactHeader) {
+    compactHeader.addEventListener("click", (e) => {
+      // Don't toggle if clicking the button itself
+      if (e.target !== toggleControlsBtn) {
+        toggleControls();
+      }
+    });
+  }
 
   // Update speed display when slider changes
   scrollSpeedInput.addEventListener("input", () => {
@@ -37,7 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", handleKeyDown);
 
   // Handle song loaded event
-  window.addEventListener("songLoaded", resetScroll);
+  window.addEventListener("songLoaded", function () {
+    resetScroll();
+
+    // Auto-collapse controls when a song is loaded
+    if (!controlsCollapsed) {
+      toggleControls();
+    }
+  });
 
   function startScrolling() {
     if (isScrolling) return;
@@ -48,6 +89,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show stop button, hide start button
     startScrollBtn.classList.add("hidden");
     stopScrollBtn.classList.remove("hidden");
+
+    // Also update mini controls
+    miniStartScrollBtn.classList.add("hidden");
+    miniStopScrollBtn.classList.remove("hidden");
 
     // Start scrolling at the calculated speed
     scrollInterval = setInterval(() => {
@@ -72,6 +117,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show start button, hide stop button
     startScrollBtn.classList.remove("hidden");
     stopScrollBtn.classList.add("hidden");
+
+    // Also update mini controls
+    miniStartScrollBtn.classList.remove("hidden");
+    miniStopScrollBtn.classList.add("hidden");
   }
 
   function resetScroll() {
@@ -107,12 +156,32 @@ document.addEventListener("DOMContentLoaded", () => {
         .requestFullscreen()
         .then(() => {
           appContainer.classList.add("fullscreen");
+          // Auto-collapse controls in fullscreen
+          if (!controlsCollapsed) {
+            toggleControls();
+          }
         })
         .catch((err) => {
           console.error(
             `Error attempting to enable fullscreen: ${err.message}`
           );
         });
+    }
+  }
+
+  function toggleControls() {
+    controlsCollapsed = !controlsCollapsed;
+
+    if (controlsCollapsed) {
+      controls.classList.add("collapsed");
+      teleprompter.classList.add("expanded");
+      toggleControlsBtn.textContent = "Show Controls";
+      miniControls.classList.add("visible");
+    } else {
+      controls.classList.remove("collapsed");
+      teleprompter.classList.remove("expanded");
+      toggleControlsBtn.textContent = "Hide Controls";
+      miniControls.classList.remove("visible");
     }
   }
 
@@ -151,6 +220,12 @@ document.addEventListener("DOMContentLoaded", () => {
       case "f":
         e.preventDefault();
         toggleFullscreen();
+        break;
+
+      case "c":
+      case "C":
+        // Toggle controls
+        toggleControls();
         break;
 
       case "Escape":

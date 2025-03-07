@@ -87,12 +87,76 @@ button:hover {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  position: relative;
 }
 
 #controls {
   background-color: #2a2a2a;
-  padding: 1rem;
   border-bottom: 1px solid #444;
+  transition: transform 0.3s ease, max-height 0.3s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+
+#controls.collapsed {
+  max-height: 40px;
+}
+
+#controls.collapsed .controls-content {
+  display: none;
+}
+
+#controls h1 {
+  margin: 10px;
+  font-size: 1.2rem;
+  color: #ff6b6b;
+}
+
+.controls-content {
+  padding: 10px;
+}
+
+#toggle-controls {
+  position: absolute;
+  top: 8px;
+  right: 20px;
+  background: #ff6b6b;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  color: #fff;
+  cursor: pointer;
+  z-index: 101;
+  font-size: 0.8rem;
+}
+
+#toggle-controls:hover {
+  background: #fa5252;
+}
+
+#teleprompter {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background-color: #121212;
+  margin-top: 40px; /* Space for the collapsed control header */
+  height: calc(100vh - 40px);
+  transition: margin-top 0.3s ease, height 0.3s ease;
+}
+
+#teleprompter.expanded {
+  margin-top: 0;
+  height: 100vh;
+}
+
+#controls-content {
+  padding: 1rem;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
 .input-group {
@@ -113,8 +177,12 @@ button:hover {
 .control-group {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
+  padding: 10px;
+  background: #222;
+  border-radius: 4px;
+  margin-top: 10px;
 }
 
 /* Teleprompter Styles */
@@ -123,11 +191,19 @@ button:hover {
   overflow-y: auto;
   padding: 2rem;
   background-color: #121212;
+  margin-top: 40px; /* Space for the collapsed control header */
+  height: calc(100vh - 40px);
+  transition: margin-top 0.3s ease, height 0.3s ease;
+}
+
+#teleprompter.expanded {
+  margin-top: 0;
+  height: 100vh;
 }
 
 #song-content {
-  font-size: 1.2rem;
-  max-width: 800px;
+  font-size: 1.5rem; /* Increased font size for better readability */
+  max-width: 1000px;
   margin: 0 auto;
   padding-bottom: 70vh; /* Extra padding at the bottom for scrolling */
 }
@@ -168,6 +244,7 @@ button:hover {
 
 .fullscreen #teleprompter {
   padding-top: 3rem;
+  margin-top: 0;
 }
 
 /* Loading indicator */
@@ -347,8 +424,8 @@ button:hover {
 
 /* Extract Tool Styles */
 .extract-tool-container {
-  margin: 15px 0;
-  padding: 20px;
+  margin: 10px 0;
+  padding: 15px;
   background-color: #2a2a2a;
   border-radius: 5px;
   border: 1px solid #444;
@@ -356,25 +433,23 @@ button:hover {
 
 .extract-tool-container h3 {
   color: #ff6b6b;
-  margin-bottom: 15px;
-  text-align: center;
-  font-size: 1.2rem;
+  margin-bottom: 10px;
+  font-size: 1rem;
 }
 
 .tabs {
   display: flex;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   border-bottom: 1px solid #444;
+  gap: 5px;
 }
 
 .tab-button {
   background-color: transparent;
   color: #aaa;
   border: none;
-  padding: 8px 15px;
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s;
+  padding: 5px 10px;
+  font-size: 0.9rem;
 }
 
 .tab-button.active {
@@ -387,15 +462,16 @@ button:hover {
   padding: 10px;
   background-color: #333;
   border-radius: 4px;
+  font-size: 0.9rem;
 }
 
 .tab-content ol {
-  margin-left: 20px;
-  margin-bottom: 15px;
+  margin-left: 15px;
+  margin-bottom: 10px;
 }
 
 .tab-content li {
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   color: #ddd;
 }
 
@@ -425,28 +501,54 @@ kbd {
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 5px;
   color: #ddd;
+  font-size: 0.9rem;
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 8px;
+  padding: 5px;
   background-color: #1a1a1a;
   border: 1px solid #444;
   color: #fff;
   border-radius: 3px;
+  font-size: 0.9rem;
 }
 
 .form-group textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+/* Scroll controls */
+.scroll-speed-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scroll-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.keyboard-shortcuts {
+  font-size: 0.8rem;
+  color: #888;
+  margin-left: auto;
+}
+
+.keyboard-shortcuts ul {
+  list-style: none;
+  display: flex;
+  gap: 15px;
 }
 
 /* Responsive adjustments */
@@ -459,4 +561,44 @@ kbd {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  #controls.collapsed h1 {
+    font-size: 1rem;
+  }
+}
+
+/* New styles for compact mode */
+#mini-controls {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(42, 42, 42, 0.8);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+#mini-controls.visible {
+  display: flex;
+  gap: 8px;
+}
+
+#mini-controls button {
+  font-size: 0.8rem;
+  padding: 5px 10px;
+}
+
+.compact-controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.compact-controls-header h1 {
+  margin: 0;
+  font-size: 1.1rem;
 }

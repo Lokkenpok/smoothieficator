@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const errorLoad = document.getElementById("error-load");
   const scrollControls = document.getElementById("scroll-controls");
   const teleprompter = document.getElementById("teleprompter");
+  const controls = document.getElementById("controls");
 
   // Initialize local storage for saved songs
   const localSongs = JSON.parse(localStorage.getItem("savedSongs") || "{}");
@@ -14,6 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event.detail) {
       displaySong(event.detail);
       scrollControls.classList.remove("hidden");
+
+      // Collapse controls to maximize teleprompter space
+      if (!controls.classList.contains("collapsed")) {
+        document.getElementById("toggle-controls").click();
+      }
     }
   });
 
@@ -80,6 +86,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Dispatch event that song has loaded
     window.dispatchEvent(new CustomEvent("songLoaded"));
+
+    // Make sure mini controls are visible
+    document.getElementById("mini-controls").classList.add("visible");
   }
 
   // Process song data from extraction tools
