@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meat Smoothie Teleprompter</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="login-container">
+      <div class="login-box">
+        <h1>Meat Smoothie</h1>
+        <h2>Band Teleprompter</h2>
+        <div id="password-form">
+          <input
+            type="password"
+            id="password-input"
+            placeholder="Enter band password"
+          />
+          <button id="login-button">Enter</button>
+        </div>
+        <div id="error-message" class="hidden">
+          Incorrect password. Try again!
+        </div>
+      </div>
+    </div>
+
+    <div id="app-container" class="hidden">
+      <div id="controls">
+        <div class="input-group">
+          <input
+            type="text"
+            id="song-url"
+            placeholder="Paste Ultimate Guitar URL here"
+          />
+          <button id="load-button">Load Song</button>
+        </div>
+        <div class="control-group hidden" id="scroll-controls">
+          <label for="scroll-speed">Scroll Speed:</label>
+          <input type="range" id="scroll-speed" min="1" max="10" value="3" />
+          <button id="start-scroll">Start Scrolling</button>
+          <button id="stop-scroll" class="hidden">Stop Scrolling</button>
+          <button id="reset-scroll">Reset</button>
+          <button id="toggle-fullscreen">Fullscreen</button>
+        </div>
+        <div id="loading-indicator" class="hidden">Loading song...</div>
+        <div id="error-load" class="hidden">
+          Error loading song. Please check the URL.
+        </div>
+      </div>
+
+      <div id="teleprompter">
+        <div id="song-content"></div>
+      </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/scraper.js"></script>
+    <script src="js/teleprompter.js"></script>
+  </body>
+</html>
