@@ -35,17 +35,61 @@
           />
           <button id="load-button">Load Song</button>
         </div>
-        <div class="bookmarklet-container">
-          <p>
-            Or use our
-            <a id="bookmarklet-link" href="#">Meat Smoothie Bookmarklet</a>
-            (drag to your bookmarks bar)
-          </p>
-          <p class="bookmarklet-instructions">
-            When viewing a song on Ultimate Guitar, click the bookmarklet to
-            send it to this teleprompter.
-          </p>
+
+        <div class="extract-tool-container">
+          <h3>Easy Song Extraction</h3>
+          <div class="tabs">
+            <button class="tab-button active" data-tab="copy-paste">
+              Copy-Paste Method
+            </button>
+            <button class="tab-button" data-tab="manual-method">
+              Manual Input
+            </button>
+          </div>
+
+          <div class="tab-content" id="copy-paste">
+            <ol>
+              <li>Go to the Ultimate Guitar song page</li>
+              <li>Press <kbd>Ctrl+A</kbd> to select all content</li>
+              <li>Press <kbd>Ctrl+C</kbd> to copy</li>
+              <li>Click the button below and paste with <kbd>Ctrl+V</kbd></li>
+            </ol>
+            <button id="extract-button" class="primary-button">
+              Extract Song from Clipboard
+            </button>
+          </div>
+
+          <div class="tab-content hidden" id="manual-method">
+            <div class="form-group">
+              <label for="song-title">Song Title:</label>
+              <input
+                type="text"
+                id="song-title"
+                placeholder="Enter song title"
+              />
+            </div>
+            <div class="form-group">
+              <label for="song-artist">Artist:</label>
+              <input
+                type="text"
+                id="song-artist"
+                placeholder="Enter artist name"
+              />
+            </div>
+            <div class="form-group">
+              <label for="song-content">Song Content (Chords & Lyrics):</label>
+              <textarea
+                id="song-content-input"
+                rows="6"
+                placeholder="Paste chords and lyrics here"
+              ></textarea>
+            </div>
+            <button id="manual-extract-button" class="primary-button">
+              Create Song
+            </button>
+          </div>
         </div>
+
         <div class="control-group hidden" id="scroll-controls">
           <label for="scroll-speed">Scroll Speed:</label>
           <input type="range" id="scroll-speed" min="1" max="10" value="3" />
@@ -68,6 +112,6 @@
     <script src="js/auth.js"></script>
     <script src="js/scraper.js"></script>
     <script src="js/teleprompter.js"></script>
-    <script src="js/bookmarklet-generator.js"></script>
+    <script src="js/extractor.js"></script>
   </body>
 </html>

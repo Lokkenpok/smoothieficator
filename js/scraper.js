@@ -569,8 +569,8 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
     return false;
   }
 
-  // Process song data from bookmarklet
-  function processSongFromBookmarklet(parsedData) {
+  // Process song data from extraction tools - make it globally accessible
+  window.processSongFromBookmarklet = function (parsedData) {
     if (!parsedData || !parsedData.content) {
       errorLoad.textContent = "Invalid or missing song data";
       errorLoad.classList.remove("hidden");
@@ -581,11 +581,13 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
     let processedContent = parsedData.content;
 
     // Clean up the content - handle escape sequences
-    processedContent = processedContent
-      .replace(/\\n/g, "\n")
-      .replace(/\\r/g, "")
-      .replace(/\\"/g, '"')
-      .replace(/\\t/g, "    ");
+    if (typeof processedContent === "string") {
+      processedContent = processedContent
+        .replace(/\\n/g, "\n")
+        .replace(/\\r/g, "")
+        .replace(/\\"/g, '"')
+        .replace(/\\t/g, "    ");
+    }
 
     // If content doesn't have [ch] tags, process the chords
     if (!processedContent.includes("[ch]")) {
@@ -611,7 +613,10 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
     // Show scroll controls
     scrollControls.classList.remove("hidden");
     return true;
-  }
+  };
+
+  // Alias for backward compatibility
+  processSongFromBookmarklet = window.processSongFromBookmarklet;
 
   // Handle displaying song content from either source
   function displaySongContent(data) {

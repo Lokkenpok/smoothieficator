@@ -345,6 +345,110 @@ button:hover {
   background: linear-gradient(to bottom, #ff8585, #ff6b6b);
 }
 
+/* Extract Tool Styles */
+.extract-tool-container {
+  margin: 15px 0;
+  padding: 20px;
+  background-color: #2a2a2a;
+  border-radius: 5px;
+  border: 1px solid #444;
+}
+
+.extract-tool-container h3 {
+  color: #ff6b6b;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #444;
+}
+
+.tab-button {
+  background-color: transparent;
+  color: #aaa;
+  border: none;
+  padding: 8px 15px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-button.active {
+  color: #fff;
+  border-bottom: 3px solid #ff6b6b;
+  background-color: #333;
+}
+
+.tab-content {
+  padding: 10px;
+  background-color: #333;
+  border-radius: 4px;
+}
+
+.tab-content ol {
+  margin-left: 20px;
+  margin-bottom: 15px;
+}
+
+.tab-content li {
+  margin-bottom: 8px;
+  color: #ddd;
+}
+
+kbd {
+  background-color: #444;
+  color: #fff;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.primary-button {
+  background-color: #ff6b6b;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.primary-button:hover {
+  background-color: #fa5252;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #ddd;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  background-color: #1a1a1a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 3px;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   #song-content {
