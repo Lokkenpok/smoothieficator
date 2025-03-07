@@ -92,11 +92,60 @@ document.addEventListener("DOMContentLoaded", () => {
       </ol>
       
       <pre class="code-block">
-copy(JSON.stringify({
-  title: document.querySelector('h1')?.textContent || "Unknown Song",
-  artist: document.querySelector('div[class*="artist"]')?.textContent || "Unknown Artist",
-  content: window.UGAPP.store.page.data?.tab?.content || ""
-}))
+// Function to get song content
+function getSongData() {
+  // Try to get the content from multiple possible sources
+  let content = '';
+  
+  // First try: UGAPP store (modern UG)
+  if (window.UGAPP && window.UGAPP.store && window.UGAPP.store.page && window.UGAPP.store.page.data && window.UGAPP.store.page.data.tab) {
+    content = window.UGAPP.store.page.data.tab.content;
+  }
+  
+  // Second try: Look for tab content element
+  if (!content) {
+    const tabElement = document.querySelector('.js-tab-content, [data-content="tab"], .tab-content, #cont');
+    if (tabElement) {
+      content = tabElement.innerText;
+    }
+  }
+  
+  // Third try: Extract from JSON in the script tags
+  if (!content) {
+    const scripts = document.querySelectorAll('script');
+    for (const script of scripts) {
+      if (script.textContent.includes('"content":"') && script.textContent.includes('"revision_id"')) {
+        const match = script.textContent.match(/"content":"([^"]+)"/);
+        if (match && match[1]) {
+          content = match[1].replace(/\\n/g, '\\n').replace(/\\"/g, '"');
+          break;
+        }
+      }
+    }
+  }
+  
+  // Get title and artist
+  let title = document.querySelector('h1')?.textContent || "";
+  let artist = document.querySelector('div[class*="artist"]')?.textContent || "";
+  
+  // If we couldn't find the artist through normal means, try to extract it from the title
+  if (!artist && title.includes(" by ")) {
+    const parts = title.split(" by ");
+    title = parts[0];
+    artist = parts[1];
+  }
+  
+  return {
+    title: title || "Unknown Song",
+    artist: artist || "Unknown Artist",
+    content: content || "",
+    url: window.location.href
+  };
+}
+
+// Copy the data to clipboard
+copy(JSON.stringify(getSongData()));
+console.log("✅ Song data copied to clipboard! Return to the teleprompter app and click 'Paste Song Data'");
       </pre>
       
       <p>This will copy the song data to your clipboard.</p>
@@ -121,13 +170,24 @@ copy(JSON.stringify({
         if (songData) {
           try {
             const parsedData = JSON.parse(songData);
-            if (parsedData.title && parsedData.content) {
+
+            // Check if content is empty
+            if (!parsedData.content || parsedData.content.trim() === "") {
+              showError(
+                "The song content is empty. This can happen if the tab requires a Pro account or isn't properly loaded. Please try again with a different song or manually copy the tab content."
+              );
+              return;
+            }
+
+            if (parsedData.title) {
               processSongData(parsedData, songUrlInput.value);
             } else {
               showError("Invalid song data format. Please try again.");
             }
           } catch (e) {
-            showError("Could not parse song data. Please try again.");
+            showError(
+              "Could not parse song data. Please make sure you've copied the entire output from the console."
+            );
           }
         }
       });
@@ -137,6 +197,12 @@ copy(JSON.stringify({
   function processSongData(songData, url) {
     // Process content for chords if needed
     let processedContent = songData.content;
+
+    // Clean up the content - handle escape sequences
+    processedContent = processedContent
+      .replace(/\\n/g, "\n")
+      .replace(/\\"/g, '"')
+      .replace(/\\t/g, "    ");
 
     // If content doesn't have [ch] tags, process the chords
     if (!processedContent.includes("[ch]")) {
