@@ -8,22 +8,61 @@ document.addEventListener("DOMContentLoaded", () => {
   const scrollControls = document.getElementById("scroll-controls");
   const teleprompter = document.getElementById("teleprompter");
 
-  loadButton.addEventListener("click", loadSong);
+  // List of CORS proxies to try
+  const CORS_PROXIES = [
+    'https://cors-anywhere.herokuapp.com/',
+    'https://api.allorigins.win/raw?url=',
+    'https://api.codetabs.com/v1/proxy?quest=',
+    'https://corsproxy.io/?'
+  ];
 
+  // Retry configuration
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 1000; // 1 second
+
+  loadButton.addEventListener("click", loadSong);
   songUrlInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       loadSong();
     }
   });
 
+  // Sleep function for delays between retries
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  // Function to try different proxies
+  async function fetchWithProxy(url, proxyIndex = 0, retryCount = 0) {
+    if (proxyIndex >= CORS_PROXIES.length) {
+      if (retryCount < MAX_RETRIES) {
+        // If we've tried all proxies, wait and start over
+        await sleep(RETRY_DELAY);
+        return fetchWithProxy(url, 0, retryCount + 1);
+      }
+      throw new Error("All proxies failed");
+    }
+
+    try {
+      const proxyUrl = CORS_PROXIES[proxyIndex] + encodeURIComponent(url);
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.text();
+    } catch (error) {
+      console.warn(`Proxy ${CORS_PROXIES[proxyIndex]} failed:`, error);
+      // Try next proxy
+      return fetchWithProxy(url, proxyIndex + 1, retryCount);
+    }
+  }
+
   async function loadSong() {
     const url = songUrlInput.value.trim();
-
     if (!url) {
       showError("Please enter a URL");
       return;
     }
-
     if (!url.includes("ultimate-guitar.com")) {
       showError("Please enter a valid Ultimate Guitar URL");
       return;
@@ -43,91 +82,49 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Create an iframe to load the content
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+      // Try to fetch with proxy system
+      const html = await fetchWithProxy(url);
+      
+      // Extract title and artist from meta tags
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      
+      let title = doc.querySelector('meta[property="og:title"]')?.content || '';
+      let artist = doc.querySelector('meta[property="og:description"]')?.content || '';
+      
+      // Clean up title and artist
+      title = title.split(' by ')[0] || extractTitleFromUrl(url);
+      artist = artist.split(' - ')[0] || "Unknown Artist";
+      
+      // Parse the content
+      const content = parseUltimateGuitarHtml(html);
+      
+      if (!content) {
+        throw new Error("Could not extract song content from the page");
+      }
 
-      // Create a data URL from the target URL
-      const dataUrl = `data:text/html;charset=utf-8,
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <script>
-              window.onload = function() {
-                fetch('${url}')
-                  .then(response => response.text())
-                  .then(html => {
-                    window.parent.postMessage({
-                      type: 'songData',
-                      html: html
-                    }, '*');
-                  })
-                  .catch(error => {
-                    window.parent.postMessage({
-                      type: 'error',
-                      error: error.message
-                    }, '*');
-                  });
-              };
-            </script>
-          </head>
-          <body></body>
-        </html>`;
-
-      // Listen for messages from the iframe
-      window.addEventListener('message', async function(event) {
-        if (event.data.type === 'songData') {
-          try {
-            const html = event.data.html;
-            
-            // Parse the content
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Extract data from the parsed HTML
-            let title = doc.querySelector('meta[property="og:title"]')?.content || '';
-            let artist = doc.querySelector('meta[property="og:description"]')?.content || '';
-            
-            // Clean up title and artist
-            title = title.split(' by ')[0] || extractTitleFromUrl(url);
-            artist = artist.split(' - ')[0] || "Unknown Artist";
-            
-            // Parse the tab content
-            const content = parseUltimateGuitarHtml(html);
-            
-            if (!content) {
-              throw new Error("Could not extract song content from the page");
-            }
-
-            displaySong({
-              title,
-              artist,
-              content,
-              type: "chords"
-            });
-
-            scrollControls.classList.remove("hidden");
-          } catch (error) {
-            showError("Error processing song content: " + error.message);
-          }
-          
-          // Clean up
-          document.body.removeChild(iframe);
-          loadingIndicator.classList.add("hidden");
-        } else if (event.data.type === 'error') {
-          showError("Error loading song: " + event.data.error);
-          document.body.removeChild(iframe);
-          loadingIndicator.classList.add("hidden");
-        }
-      }, false);
-
-      // Load the data URL into the iframe
-      iframe.src = dataUrl;
+      displaySong({
+        title,
+        artist,
+        content,
+        type: "chords"
+      });
+      scrollControls.classList.remove("hidden");
+      
+      // Store successful proxy index in localStorage for future use
+      const successfulProxy = CORS_PROXIES.findIndex(proxy => html.includes(proxy));
+      if (successfulProxy !== -1) {
+        localStorage.setItem('lastSuccessfulProxy', successfulProxy.toString());
+      }
 
     } catch (error) {
       console.error("Error loading song:", error);
-      showError("Error loading song. Please check the URL and try again.");
+      if (error.message.includes('All proxies failed')) {
+        showError("All CORS proxies failed. Please try again later or try the example song (ID: 2272453)");
+      } else {
+        showError("Error loading song. Please try again or use the example song (ID: 2272453)");
+      }
+    } finally {
       loadingIndicator.classList.add("hidden");
     }
   }
