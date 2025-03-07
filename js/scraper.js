@@ -480,73 +480,92 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
     const songData = urlParams.get("songData");
     const songId = urlParams.get("songId");
 
+    // Return early if no parameters found
+    if (!songData && !songId) return false;
+
     // Clear the URL parameters without refreshing the page
     window.history.replaceState({}, document.title, window.location.pathname);
 
-    // First try direct song data (smaller songs)
-    if (songData) {
-      try {
+    // Show loading indicator while processing
+    loadingIndicator.classList.remove("hidden");
+    errorLoad.classList.add("hidden");
+
+    try {
+      // Handle direct song data
+      if (songData) {
         const parsedData = JSON.parse(decodeURIComponent(songData));
-        return processSongFromBookmarklet(parsedData);
-      } catch (error) {
-        console.error("Error processing direct song data:", error);
-        errorLoad.textContent = "Error processing song data: " + error.message;
-        errorLoad.classList.remove("hidden");
+        const result = processSongFromBookmarklet(parsedData);
+        loadingIndicator.classList.add("hidden");
+        return result;
       }
-    }
-    // Then try song ID (from sessionStorage or localStorage)
-    else if (songId) {
-      try {
-        // First try to get from sessionStorage (preferred method)
-        let storedData = sessionStorage.getItem(songId);
+      // Handle song ID
+      else if (songId) {
+        // Try to get from storage sources
+        const storageOptions = [
+          { type: "sessionStorage", store: sessionStorage },
+          { type: "localStorage", store: localStorage },
+        ];
 
-        // If not in sessionStorage, try localStorage
-        if (!storedData) {
-          storedData = localStorage.getItem(songId);
-        }
+        // Try each storage location
+        let storedData = null;
 
-        // If still not found, try window.opener's storage
-        if (!storedData && window.opener && !window.opener.closed) {
+        for (const option of storageOptions) {
           try {
-            // Try sessionStorage in the opener window
-            storedData = window.opener.sessionStorage.getItem(songId);
-
-            // If not there, try localStorage in the opener window
-            if (!storedData) {
-              storedData = window.opener.localStorage.getItem(songId);
+            storedData = option.store.getItem(songId);
+            if (storedData) {
+              console.log(`Found song data in ${option.type}`);
+              break;
             }
           } catch (e) {
-            console.error("Error accessing opener's storage:", e);
+            console.warn(`Error accessing ${option.type}:`, e);
           }
         }
 
-        if (!storedData) {
-          throw new Error(
-            "Song data not found. It may have expired or browser security prevented access."
-          );
-        }
-
-        // Remove from storage to clean up
-        try {
-          sessionStorage.removeItem(songId);
-          localStorage.removeItem(songId);
-          if (window.opener && !window.opener.closed) {
-            window.opener.sessionStorage.removeItem(songId);
-            window.opener.localStorage.removeItem(songId);
+        // If not found locally, try opener window
+        if (!storedData && window.opener && !window.opener.closed) {
+          for (const option of storageOptions) {
+            try {
+              storedData = window.opener[option.type].getItem(songId);
+              if (storedData) {
+                console.log(`Found song data in opener's ${option.type}`);
+                break;
+              }
+            } catch (e) {
+              console.warn(`Error accessing opener's ${option.type}:`, e);
+            }
           }
-        } catch (e) {
-          // Ignore cleanup errors
         }
 
-        // Process the data
-        const parsedData = JSON.parse(storedData);
-        return processSongFromBookmarklet(parsedData);
-      } catch (error) {
-        console.error("Error processing song from storage:", error);
-        errorLoad.textContent = "Error loading song: " + error.message;
-        errorLoad.classList.remove("hidden");
+        // Process the data if found
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+
+          // Clean up storage
+          try {
+            sessionStorage.removeItem(songId);
+            localStorage.removeItem(songId);
+            if (window.opener && !window.opener.closed) {
+              window.opener.sessionStorage.removeItem(songId);
+              window.opener.localStorage.removeItem(songId);
+            }
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+
+          const result = processSongFromBookmarklet(parsedData);
+          loadingIndicator.classList.add("hidden");
+          return result;
+        } else {
+          throw new Error("Song data not found in storage");
+        }
       }
+    } catch (error) {
+      console.error("Error processing song data:", error);
+      errorLoad.textContent = "Error processing song data: " + error.message;
+      errorLoad.classList.remove("hidden");
+      loadingIndicator.classList.add("hidden");
     }
+
     return false;
   }
 

@@ -1,78 +1,44 @@
 document.addEventListener("DOMContentLoaded", function () {
   const bookmarkletLink = document.getElementById("bookmarklet-link");
 
-  // Get the current site URL for the teleprompter
-  const teleprompterURL = window.location.origin + window.location.pathname;
+  // Get the base URL for our site
+  const baseUrl = window.location.origin;
 
-  // Ultra-minimal bookmarklet that uses the very simplest syntax
-  const bookmarkletCode = `javascript:
-(function(){
-  // Simple extraction function that won't break
-  var d=document;
-  var t=d.querySelector('h1')?d.querySelector('h1').innerText:'Unknown Song';
-  var a=d.querySelector('[class*="artist"]')?d.querySelector('[class*="artist"]').innerText:'Unknown Artist';
-  
-  // Show user feedback
-  var o=d.createElement('div');
-  o.style.cssText='position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9999;background:#ff6b6b;color:#fff;padding:10px;border-radius:4px';
-  o.innerHTML='Extracting song...';
-  d.body.appendChild(o);
-  
-  try{
-    // Get content from page
-    var c='';
-    var tab=d.querySelector('.js-tab-content, pre.tab-content');
-    if(tab) c=tab.innerText;
-    
-    if(!c && window.UGAPP) c=window.UGAPP.store.page.data.tab_view.wiki_tab.content;
-    
-    if(!c){
-      o.innerHTML='Could not extract song content';
-      o.style.background='#F44336';
-      setTimeout(function(){d.body.removeChild(o)},3000);
-      return;
-    }
-    
-    o.innerHTML='Opening teleprompter...';
-    o.style.background='#4CAF50';
-    
-    // Create a simple data object and send to teleprompter
-    var data={title:t,artist:a,content:c};
-    var url='${teleprompterURL}?songData='+encodeURIComponent(JSON.stringify(data));
-    
-    // Open in new tab with limited URL length
-    setTimeout(function(){
-      window.open(url,'_blank');
-      setTimeout(function(){d.body.removeChild(o)},1000);
-    },500);
-  }catch(e){
-    o.innerHTML='Error: '+e.message;
-    o.style.background='#F44336';
-    setTimeout(function(){d.body.removeChild(o)},3000);
-  }
-})();`;
+  // Create a tiny bookmarklet that just opens our extraction page
+  const bookmarkletCode = `javascript:(function(){
+    var url='${baseUrl}/extractor.html?url='+encodeURIComponent(window.location.href);
+    window.open(url,'MeatSmoothieExtractor','width=500,height=600');
+  })();`;
 
-  // Set the href without further processing
+  // Set the href attribute to the bookmarklet code
   bookmarkletLink.setAttribute("href", bookmarkletCode);
 
-  // Keep the current bookmarklet UI since it looks good
-  // But modify the instructions to be more clear
-  const instructionsDiv = document.querySelector(".bookmarklet-instructions");
-  if (instructionsDiv) {
-    instructionsDiv.innerHTML = `
+  // Update the bookmarklet UI with better instructions
+  const container = document.querySelector(".bookmarklet-container");
+  container.innerHTML = `
+    <h3>The Easiest Way to Extract Songs</h3>
+    <p>Drag this button to your bookmarks bar:</p>
+    <div class="drag-instruction">
+      <a id="bookmarklet-link" href="#" class="bookmarklet-button">Get Song</a>
+      <span class="drag-arrow">← Drag to your bookmarks</span>
+    </div>
+    <div class="bookmarklet-instructions">
       <ol>
-        <li>First, <strong>reveal your bookmarks bar</strong> in your browser if it's not visible (Ctrl+Shift+B in most browsers)</li>
-        <li><strong>Drag</strong> the button above to your bookmarks bar - don't click it!</li>
-        <li>Visit any Ultimate Guitar chord or tab page</li>
-        <li>Click the bookmark you just created in your bookmarks bar</li>
-        <li>The song will open in this teleprompter automatically</li>
+        <li>First, make sure your <strong>bookmarks bar is visible</strong> (press Ctrl+Shift+B)</li>
+        <li><strong>Drag</strong> the button above to your bookmarks bar</li>
+        <li>When viewing any song on Ultimate Guitar, click the bookmark</li>
+        <li>In the popup window, click "Extract & Open in Teleprompter"</li>
       </ol>
-    `;
-  }
+    </div>
+  `;
+
+  // Re-attach the href to the new link
+  const updatedLink = document.getElementById("bookmarklet-link");
+  updatedLink.setAttribute("href", bookmarkletCode);
 
   // Add click warning
-  bookmarkletLink.addEventListener("click", function (e) {
+  updatedLink.addEventListener("click", function (e) {
     e.preventDefault();
-    alert("Don't click this button! Instead, drag it to your bookmarks bar.");
+    alert("Don't click this link! Drag it to your bookmarks bar instead.");
   });
 });
