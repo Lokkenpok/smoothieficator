@@ -43,31 +43,145 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Parse the URL to get the song data
-      const urlData = parseUltimateGuitarUrl(url);
-      if (!urlData) {
-        throw new Error(
-          "Could not parse the URL. Please make sure you're using a valid Ultimate Guitar tab URL"
-        );
-      }
+      // Create an iframe to load the content
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
 
-      const songData = {
-        title: urlData.title,
-        artist: urlData.artist,
-        content: urlData.content,
-        type: "chords",
-      };
+      // Create a data URL from the target URL
+      const dataUrl = `data:text/html;charset=utf-8,
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <script>
+              window.onload = function() {
+                fetch('${url}')
+                  .then(response => response.text())
+                  .then(html => {
+                    window.parent.postMessage({
+                      type: 'songData',
+                      html: html
+                    }, '*');
+                  })
+                  .catch(error => {
+                    window.parent.postMessage({
+                      type: 'error',
+                      error: error.message
+                    }, '*');
+                  });
+              };
+            </script>
+          </head>
+          <body></body>
+        </html>`;
 
-      // Display the formatted song
-      displaySong(songData);
+      // Listen for messages from the iframe
+      window.addEventListener('message', async function(event) {
+        if (event.data.type === 'songData') {
+          try {
+            const html = event.data.html;
+            
+            // Parse the content
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Extract data from the parsed HTML
+            let title = doc.querySelector('meta[property="og:title"]')?.content || '';
+            let artist = doc.querySelector('meta[property="og:description"]')?.content || '';
+            
+            // Clean up title and artist
+            title = title.split(' by ')[0] || extractTitleFromUrl(url);
+            artist = artist.split(' - ')[0] || "Unknown Artist";
+            
+            // Parse the tab content
+            const content = parseUltimateGuitarHtml(html);
+            
+            if (!content) {
+              throw new Error("Could not extract song content from the page");
+            }
 
-      // Show scroll controls
-      scrollControls.classList.remove("hidden");
+            displaySong({
+              title,
+              artist,
+              content,
+              type: "chords"
+            });
+
+            scrollControls.classList.remove("hidden");
+          } catch (error) {
+            showError("Error processing song content: " + error.message);
+          }
+          
+          // Clean up
+          document.body.removeChild(iframe);
+          loadingIndicator.classList.add("hidden");
+        } else if (event.data.type === 'error') {
+          showError("Error loading song: " + event.data.error);
+          document.body.removeChild(iframe);
+          loadingIndicator.classList.add("hidden");
+        }
+      }, false);
+
+      // Load the data URL into the iframe
+      iframe.src = dataUrl;
+
     } catch (error) {
       console.error("Error loading song:", error);
-      showError(error.message);
-    } finally {
+      showError("Error loading song. Please check the URL and try again.");
       loadingIndicator.classList.add("hidden");
+    }
+  }
+
+  function parseUltimateGuitarHtml(html) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      
+      // Try to find the tab content in the page
+      const tabContentElement = doc.querySelector('.js-tab-content');
+      const tabContent = tabContentElement ? tabContentElement.textContent : '';
+      
+      if (!tabContent) return null;
+
+      // Clean up the content
+      let cleanContent = tabContent
+        // Remove tab characters and multiple spaces
+        .replace(/\t/g, '')
+        .replace(/\s+/g, ' ')
+        // Clean up line endings
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => {
+          // Keep only lines that:
+          // 1. Start with a section marker [Verse], [Chorus], etc.
+          // 2. Contain chords [ch]
+          // 3. Contain actual lyrics (non-empty lines that don't start with [ and aren't just whitespace)
+          return line.startsWith('[') || 
+                 line.includes('[ch]') || 
+                 (line && !line.startsWith('[') && !/^\s*$/.test(line));
+        })
+        .join('\n');
+
+      // Remove any non-essential sections
+      const unwantedSections = [
+        /\[tab\][\s\S]*?\[\/tab\]/gi,
+        /\[Song Info\][\s\S]*?\n\[/g,
+        /\[Basic Chord Structure\][\s\S]*?\n\[/g,
+        /\[Note\][\s\S]*?\n\[/g,
+        /\[Common Chord Progressions\][\s\S]*?\n\[/g,
+        /\[Tips\][\s\S]*?\n\[/g
+      ];
+
+      unwantedSections.forEach(regex => {
+        cleanContent = cleanContent.replace(regex, '[');
+      });
+
+      return cleanContent;
+    } catch (e) {
+      console.error("Error parsing HTML:", e);
+      return null;
     }
   }
 
