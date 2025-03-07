@@ -491,16 +491,37 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
         // Parse the song data
         const parsedData = JSON.parse(decodeURIComponent(songData));
 
-        // Display the song content
-        displaySongContent(parsedData);
+        // Process content for display
+        let processedContent = parsedData.content;
+
+        // Clean up the content - handle escape sequences
+        processedContent = processedContent
+          .replace(/\\n/g, "\n")
+          .replace(/\\"/g, '"')
+          .replace(/\\t/g, "    ");
+
+        // Create the song object
+        const song = {
+          title: parsedData.title || "Unknown Song",
+          artist: parsedData.artist || "Unknown Artist",
+          content: processedContent,
+          type: parsedData.type || "Chords",
+        };
+
+        // Save to local storage with the current timestamp as key
+        const timestamp = new Date().toISOString();
+        localSongs[timestamp] = song;
+        localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+
+        // Display the song
+        displaySong(song);
 
         // Show scroll controls
         scrollControls.classList.remove("hidden");
-
         return true;
       } catch (error) {
         console.error("Error processing bookmarklet data:", error);
-        errorLoad.textContent = "Error processing song data.";
+        errorLoad.textContent = "Error processing song data: " + error.message;
         errorLoad.classList.remove("hidden");
       }
     }
