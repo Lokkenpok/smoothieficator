@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetScrollBtn = document.getElementById("reset-scroll");
   const toggleFullscreenBtn = document.getElementById("toggle-fullscreen");
   const appContainer = document.getElementById("app-container");
+  const speedValueDisplay = document.querySelector(".speed-value");
 
   // Scroll state
   let isScrolling = false;
@@ -19,6 +20,18 @@ document.addEventListener("DOMContentLoaded", () => {
   stopScrollBtn.addEventListener("click", stopScrolling);
   resetScrollBtn.addEventListener("click", resetScroll);
   toggleFullscreenBtn.addEventListener("click", toggleFullscreen);
+
+  // Update speed display when slider changes
+  scrollSpeedInput.addEventListener("input", () => {
+    if (speedValueDisplay) {
+      speedValueDisplay.textContent = scrollSpeedInput.value;
+    }
+
+    if (isScrolling) {
+      stopScrolling();
+      startScrolling();
+    }
+  });
 
   // Keyboard controls
   document.addEventListener("keydown", handleKeyDown);
@@ -43,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // If we've reached the end, stop scrolling
       if (
         teleprompter.scrollTop + teleprompter.clientHeight >=
-        teleprompter.scrollHeight
+        teleprompter.scrollHeight - 10
       ) {
         stopScrolling();
       }
@@ -80,19 +93,36 @@ document.addEventListener("DOMContentLoaded", () => {
   function toggleFullscreen() {
     if (document.fullscreenElement) {
       // Exit fullscreen
-      document.exitFullscreen();
-      appContainer.classList.remove("fullscreen");
+      document
+        .exitFullscreen()
+        .then(() => {
+          appContainer.classList.remove("fullscreen");
+        })
+        .catch((err) => {
+          console.error(`Error exiting fullscreen: ${err.message}`);
+        });
     } else {
       // Enter fullscreen
-      appContainer.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-      appContainer.classList.add("fullscreen");
+      appContainer
+        .requestFullscreen()
+        .then(() => {
+          appContainer.classList.add("fullscreen");
+        })
+        .catch((err) => {
+          console.error(
+            `Error attempting to enable fullscreen: ${err.message}`
+          );
+        });
     }
   }
 
   // Handle keyboard controls
   function handleKeyDown(e) {
+    // Don't capture key events when typing in input fields
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      return;
+    }
+
     switch (e.key) {
       case " ": // Spacebar
       case "Space":
@@ -125,8 +155,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       case "Escape":
         if (document.fullscreenElement) {
-          document.exitFullscreen();
-          appContainer.classList.remove("fullscreen");
+          document.exitFullscreen().then(() => {
+            appContainer.classList.remove("fullscreen");
+          });
         }
         break;
 
@@ -143,6 +174,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const num = parseInt(e.key);
         if (num >= 1 && num <= 9) {
           scrollSpeedInput.value = num;
+
+          // Update display
+          if (speedValueDisplay) {
+            speedValueDisplay.textContent = num;
+          }
+
+          // Update scrolling if active
           if (isScrolling) {
             stopScrolling();
             startScrolling();
@@ -151,12 +189,4 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
     }
   }
-
-  // Update scrolling if speed is changed while active
-  scrollSpeedInput.addEventListener("input", () => {
-    if (isScrolling) {
-      stopScrolling();
-      startScrolling();
-    }
-  });
 });

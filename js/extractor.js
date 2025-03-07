@@ -110,14 +110,36 @@ document.addEventListener("DOMContentLoaded", function () {
         title = titleMatch[1].trim();
         artist = titleMatch[2].trim();
       } else {
-        // Try to find the title in the first few lines
-        const lines = cleanedContent.split(/\r?\n/);
-        for (let i = 0; i < Math.min(10, lines.length); i++) {
-          const line = lines[i].trim();
-          if (line && line.length > 3 && line.length < 100) {
-            // Likely a title
-            title = line;
+        // Second attempt: look for common Ultimate Guitar patterns
+        const titlePatterns = [
+          /^([^\n]+) by ([^\n]+)/i,
+          /^([^\n]+)\s*-\s*([^\n]+)/i,
+        ];
+
+        for (const pattern of titlePatterns) {
+          const match = cleanedContent.match(pattern);
+          if (match) {
+            title = match[1].trim();
+            artist = match[2].trim();
             break;
+          }
+        }
+
+        // If still not found, try to find the title in the first few lines
+        if (title === "Unknown Song") {
+          const lines = cleanedContent.split(/\r?\n/);
+          for (let i = 0; i < Math.min(10, lines.length); i++) {
+            const line = lines[i].trim();
+            if (
+              line &&
+              line.length > 3 &&
+              line.length < 100 &&
+              !line.match(/^\[/)
+            ) {
+              // Likely a title
+              title = line;
+              break;
+            }
           }
         }
       }
@@ -153,8 +175,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Track when we're inside the actual song content
     let inSongContent = false;
-    let foundIntro = false;
-    let foundFirstSection = false;
     let songContentStarted = false;
     let consecutiveEmptyLines = 0;
 
@@ -178,12 +198,11 @@ document.addEventListener("DOMContentLoaded", function () {
       // Detect intro or section header
       if (
         line.match(
-          /^\[(Intro|Verse|Chorus|Bridge|Outro|Pre-chorus|Solo|Interlude)/i
+          /^\[(Intro|Verse|Chorus|Bridge|Outro|Pre-chorus|Solo|Interlude|Instrumental)/i
         )
       ) {
         songContentStarted = true;
         inSongContent = true;
-        foundFirstSection = true;
         cleanedLines.push(line);
         continue;
       }
@@ -191,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Skip lines with common UI elements/headers
       if (
         line.match(
-          /^(Winter Sale|Pro Access|days|hrs|min|sec|Tabs|Courses|Songbooks|Articles|Forums|Publish tab|Pro|More Versions|Ver \d+|\d+,\d+ views|Tuning:|Capo:|Author|contributors|Difficulty:|Strumming|There is no strumming pattern|IQ|All rights reserved|Discover|Support|Legal|Terms|Privacy|DMCA|©|Ultimate-Guitar)/i
+          /^(Winter Sale|Pro Access|days|hrs|min|sec|Tabs|Courses|Songbooks|Articles|Forums|Publish tab|Pro|More Versions|Ver \d+|\d+,\d+ views|Tuning:|Capo:|Author|contributors|Difficulty:|Strumming|There is no strumming pattern|IQ|All rights reserved|Discover|Support|Legal|Terms|Privacy|DMCA|©|Ultimate-Guitar|Report|Recommended songs|Search|Favorite|Share)/i
         )
       ) {
         inSongContent = false;
@@ -201,7 +220,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Skip social media, navigation, etc.
       if (
         line.match(
-          /^(Font|Transpose|comment|Related tabs|All artists|#|apple store|google play|huawei store|About UG|Site Rules)/i
+          /^(Font|Transpose|comment|Related tabs|All artists|#|apple store|google play|huawei store|About UG|Site Rules|Print|Rate|Correct)/i
         )
       ) {
         inSongContent = false;
@@ -338,12 +357,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Create song and pass to the teleprompter
   function createSong(songData) {
-    // Get the main scraper functions
+    // If scraper.js is available, use its function
     if (typeof window.processSongFromBookmarklet === "function") {
-      // Use the existing function from scraper.js
       window.processSongFromBookmarklet(songData);
     } else {
-      // Fallback if the function isn't available
+      // Fallback if scraper.js isn't loaded
       const event = new CustomEvent("songExtracted", { detail: songData });
       document.dispatchEvent(event);
       alert("Song created! Use the scroll controls to start the teleprompter.");

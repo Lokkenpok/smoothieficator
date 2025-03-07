@@ -24,20 +24,11 @@
         </div>
       </div>
     </div>
-
     <div id="app-container" class="hidden">
       <div id="controls">
-        <div class="input-group">
-          <input
-            type="text"
-            id="song-url"
-            placeholder="Paste Ultimate Guitar URL here"
-          />
-          <button id="load-button">Load Song</button>
-        </div>
-
+        <h1>Meat Smoothie Teleprompter</h1>
         <div class="extract-tool-container">
-          <h3>Easy Song Extraction</h3>
+          <h3>Song Extraction</h3>
           <div class="tabs">
             <button class="tab-button active" data-tab="copy-paste">
               Copy-Paste Method
@@ -46,7 +37,6 @@
               Manual Input
             </button>
           </div>
-
           <div class="tab-content" id="copy-paste">
             <ol>
               <li>Go to the Ultimate Guitar song page</li>
@@ -58,7 +48,6 @@
               Extract Song from Clipboard
             </button>
           </div>
-
           <div class="tab-content hidden" id="manual-method">
             <div class="form-group">
               <label for="song-title">Song Title:</label>
@@ -77,7 +66,9 @@
               />
             </div>
             <div class="form-group">
-              <label for="song-content">Song Content (Chords & Lyrics):</label>
+              <label for="song-content-input"
+                >Song Content (Chords & Lyrics):</label
+              >
               <textarea
                 id="song-content-input"
                 rows="6"
@@ -89,26 +80,39 @@
             </button>
           </div>
         </div>
-
         <div class="control-group hidden" id="scroll-controls">
-          <label for="scroll-speed">Scroll Speed:</label>
-          <input type="range" id="scroll-speed" min="1" max="10" value="3" />
-          <button id="start-scroll">Start Scrolling</button>
-          <button id="stop-scroll" class="hidden">Stop Scrolling</button>
-          <button id="reset-scroll">Reset</button>
-          <button id="toggle-fullscreen">Fullscreen</button>
+          <h3>Teleprompter Controls</h3>
+          <div class="scroll-speed-container">
+            <label for="scroll-speed">Scroll Speed:</label>
+            <input type="range" id="scroll-speed" min="1" max="10" value="3" />
+            <span class="speed-value">3</span>
+          </div>
+          <div class="scroll-buttons">
+            <button id="start-scroll">Start Scrolling</button>
+            <button id="stop-scroll" class="hidden">Stop Scrolling</button>
+            <button id="reset-scroll">Reset</button>
+            <button id="toggle-fullscreen">Fullscreen</button>
+          </div>
+          <div class="keyboard-shortcuts">
+            <h4>Keyboard Shortcuts:</h4>
+            <ul>
+              <li><kbd>Space</kbd> - Start/Stop scrolling</li>
+              <li><kbd>↑</kbd><kbd>↓</kbd> - Manual scroll</li>
+              <li><kbd>Home</kbd> - Reset to top</li>
+              <li><kbd>F</kbd> - Toggle fullscreen</li>
+              <li><kbd>1</kbd>-<kbd>9</kbd> - Adjust speed</li>
+            </ul>
+          </div>
         </div>
         <div id="loading-indicator" class="hidden">Loading song...</div>
         <div id="error-load" class="hidden">
           Error loading song. Please check the URL.
         </div>
       </div>
-
       <div id="teleprompter">
         <div id="song-content"></div>
       </div>
     </div>
-
     <script src="js/auth.js"></script>
     <script src="js/scraper.js"></script>
     <script src="js/teleprompter.js"></script>
