@@ -192,9 +192,53 @@ document.addEventListener("DOMContentLoaded", () => {
     // Clear song content
     songContent.innerHTML = "";
 
+    // Hide extraction tool and show scroll controls
+    const extractionTool = document.querySelector(".extract-tool-container");
+    if (extractionTool) {
+      extractionTool.classList.add("hidden");
+    }
+
+    // Show scroll controls if they exist
+    if (scrollControls) {
+      scrollControls.classList.remove("hidden");
+    }
+
     // Create saved songs UI
     const savedSongsDiv = document.createElement("div");
     savedSongsDiv.classList.add("saved-songs");
+
+    // Check if controls are collapsed and add appropriate class
+    const isControlsCollapsed = controls.classList.contains("collapsed");
+    if (isControlsCollapsed) {
+      savedSongsDiv.classList.add("with-collapsed-controls");
+    } else {
+      savedSongsDiv.classList.add("with-expanded-controls");
+    }
+
+    // Add a back button to return to extraction UI
+    const topControls = document.createElement("div");
+    topControls.classList.add("saved-songs-controls");
+
+    const backButton = document.createElement("button");
+    backButton.textContent = "Back to Song Extraction";
+    backButton.classList.add("compact-button");
+    backButton.addEventListener("click", function () {
+      // Hide the saved songs view
+      songContent.innerHTML = "";
+
+      // Show extraction tool again
+      if (extractionTool) {
+        extractionTool.classList.remove("hidden");
+      }
+
+      // Hide scroll controls until a song is loaded
+      if (scrollControls) {
+        scrollControls.classList.add("hidden");
+      }
+    });
+
+    topControls.appendChild(backButton);
+    savedSongsDiv.appendChild(topControls);
 
     const savedSongsHeader = document.createElement("h2");
     savedSongsHeader.textContent = "Your Saved Songs";

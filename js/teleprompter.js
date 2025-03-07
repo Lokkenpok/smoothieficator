@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const stopScrollBtn = document.getElementById("stop-scroll");
   const resetScrollBtn = document.getElementById("reset-scroll");
   const toggleFullscreenBtn = document.getElementById("toggle-fullscreen");
+  const backToExtractionBtn = document.getElementById("back-to-extraction");
   const appContainer = document.getElementById("app-container");
   const speedValueDisplay = document.querySelector(".speed-value");
   const controls = document.getElementById("controls");
@@ -19,6 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const miniResetScrollBtn = document.getElementById("mini-reset-scroll");
   const miniToggleFullscreenBtn = document.getElementById(
     "mini-toggle-fullscreen"
+  );
+  const miniBackToExtractionBtn = document.getElementById(
+    "mini-back-to-extraction"
   );
   const miniScrollSpeedInput = document.getElementById("mini-scroll-speed");
   const miniSpeedValueDisplay = document.querySelector(".mini-speed-value");
@@ -43,12 +47,14 @@ document.addEventListener("DOMContentLoaded", () => {
   stopScrollBtn.addEventListener("click", stopScrolling);
   resetScrollBtn.addEventListener("click", resetScroll);
   toggleFullscreenBtn.addEventListener("click", toggleFullscreen);
+  backToExtractionBtn.addEventListener("click", backToExtraction);
 
   // Mini controls
   miniStartScrollBtn.addEventListener("click", startScrolling);
   miniStopScrollBtn.addEventListener("click", stopScrolling);
   miniResetScrollBtn.addEventListener("click", resetScroll);
   miniToggleFullscreenBtn.addEventListener("click", toggleFullscreen);
+  miniBackToExtractionBtn.addEventListener("click", backToExtraction);
 
   // Toggle controls visibility
   toggleControlsBtn.addEventListener("click", toggleControls);
@@ -116,6 +122,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadSavedSongs(); // Update the saved songs array and current index
   });
+
+  // Function to return to extraction screen
+  function backToExtraction() {
+    // Clear the current song display
+    songContent.innerHTML = "";
+
+    // Hide scroll controls
+    const scrollControls = document.getElementById("scroll-controls");
+    if (scrollControls) {
+      scrollControls.classList.add("hidden");
+    }
+
+    // Show extraction tool
+    const extractionTool = document.querySelector(".extract-tool-container");
+    if (extractionTool) {
+      extractionTool.classList.remove("hidden");
+    }
+
+    // Hide mini controls as we're no longer in song view
+    miniControls.classList.remove("visible");
+
+    // Stop scrolling if it was active
+    if (isScrolling) {
+      stopScrolling();
+    }
+
+    // If controls were collapsed, expand them for better access to the extraction tools
+    if (controlsCollapsed) {
+      toggleControls();
+    }
+  }
 
   function startScrolling() {
     if (isScrolling) return;
@@ -214,11 +251,25 @@ document.addEventListener("DOMContentLoaded", () => {
       teleprompter.classList.add("expanded");
       toggleControlsBtn.textContent = "Show Controls";
       miniControls.classList.add("visible");
+
+      // Update saved songs view if it's currently showing
+      const savedSongs = songContent.querySelector(".saved-songs");
+      if (savedSongs) {
+        savedSongs.classList.remove("with-expanded-controls");
+        savedSongs.classList.add("with-collapsed-controls");
+      }
     } else {
       controls.classList.remove("collapsed");
       teleprompter.classList.remove("expanded");
       toggleControlsBtn.textContent = "Hide Controls";
       miniControls.classList.remove("visible");
+
+      // Update saved songs view if it's currently showing
+      const savedSongs = songContent.querySelector(".saved-songs");
+      if (savedSongs) {
+        savedSongs.classList.remove("with-collapsed-controls");
+        savedSongs.classList.add("with-expanded-controls");
+      }
     }
   }
 
@@ -410,6 +461,13 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleControls();
         break;
 
+      case "b":
+      case "B":
+        // Return to extraction screen
+        e.preventDefault();
+        backToExtraction();
+        break;
+
       case "Escape":
         if (document.fullscreenElement) {
           document.exitFullscreen().then(() => {
@@ -479,5 +537,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const navigationItem = document.createElement("li");
     navigationItem.innerHTML = "<kbd>←</kbd><kbd>→</kbd> - Previous/Next song";
     keyboardShortcuts.appendChild(navigationItem);
+
+    // Add shortcut for the back to extraction function
+    const backToExtractionItem = document.createElement("li");
+    backToExtractionItem.innerHTML = "<kbd>B</kbd> - Back to Extraction";
+    keyboardShortcuts.appendChild(backToExtractionItem);
   }
 });

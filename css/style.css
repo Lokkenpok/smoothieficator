@@ -143,16 +143,21 @@ button:hover {
 #teleprompter {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   padding: 2rem;
   background-color: #121212;
   margin-top: 40px; /* Space for the collapsed control header */
   height: calc(100vh - 40px);
-  transition: margin-top 0.3s ease, height 0.3s ease;
+  transition: margin-top 0.3s ease, height 0.3s ease, padding-top 0.3s ease;
 }
 
 #teleprompter.expanded {
   margin-top: 0;
   height: 100vh;
+}
+
+#teleprompter.expanded #song-content {
+  padding-top: 20px;
 }
 
 #controls-content {
@@ -191,16 +196,21 @@ button:hover {
 #teleprompter {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   padding: 2rem;
   background-color: #121212;
   margin-top: 40px; /* Space for the collapsed control header */
   height: calc(100vh - 40px);
-  transition: margin-top 0.3s ease, height 0.3s ease;
+  transition: margin-top 0.3s ease, height 0.3s ease, padding-top 0.3s ease;
 }
 
 #teleprompter.expanded {
   margin-top: 0;
   height: 100vh;
+}
+
+#teleprompter.expanded #song-content {
+  padding-top: 20px;
 }
 
 #song-content {
@@ -304,6 +314,15 @@ button:hover {
 .saved-songs {
   max-width: 800px;
   margin: 0 auto;
+  padding-top: 20px; /* Add padding to prevent overlap */
+}
+
+.saved-songs.with-collapsed-controls {
+  padding-top: 50px; /* More space when controls bar is visible but collapsed */
+}
+
+.saved-songs.with-expanded-controls {
+  padding-top: 100px; /* Even more space when controls are fully expanded */
 }
 
 .saved-songs h2 {
@@ -702,4 +721,21 @@ kbd {
 
 #manual-method-content {
   padding-top: 15px;
+}
+
+/* Saved songs view controls */
+.saved-songs-controls {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+  z-index: 50; /* Ensure buttons are above other content */
+}
+
+.saved-songs-controls button.compact-button {
+  background-color: #3498db;
+}
+
+.saved-songs-controls button.compact-button:hover {
+  background-color: #2980b9;
 }
