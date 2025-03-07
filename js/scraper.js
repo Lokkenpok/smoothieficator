@@ -8,12 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const scrollControls = document.getElementById("scroll-controls");
   const teleprompter = document.getElementById("teleprompter");
 
-  // API base URL - pointing to your VPS
-  const API_BASE_URL = "http://37.27.181.3/api/song-data";
-
   loadButton.addEventListener("click", loadSong);
 
-  // Also load song when pressing Enter in the URL input field
   songUrlInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       loadSong();
@@ -40,40 +36,47 @@ document.addEventListener("DOMContentLoaded", () => {
     songContent.innerHTML = "";
 
     try {
-      // For development, check if we should use mock data
-      if (
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1"
-      ) {
-        const songId = extractSongIdFromUrl(url);
-        if (url.includes("2272453") || songId === "2272453") {
-          // Use mock data for the example song
-          displaySong(createMockSong("Bones", "Low Roar", mockContent.bones));
-          scrollControls.classList.remove("hidden");
-          return;
+      // For development/testing, check if we should use mock data
+      if (url.includes("2272453")) {
+        displaySong(createMockSong("Bones", "Low Roar", mockContent.bones));
+        scrollControls.classList.remove("hidden");
+        return;
+      }
+
+      // Use cors-anywhere as a fallback proxy
+      const corsProxies = [
+        "https://api.allorigins.win/raw?url=",
+        "https://corsproxy.io/?",
+        "https://cors-anywhere.herokuapp.com/",
+      ];
+
+      let songData = null;
+      let error = null;
+
+      // Try each proxy until one works
+      for (const proxyUrl of corsProxies) {
+        try {
+          const encodedUrl = encodeURIComponent(url);
+          const response = await fetch(proxyUrl + encodedUrl);
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const html = await response.text();
+          songData = parseUltimateGuitarHtml(html, url);
+
+          if (songData) {
+            break; // Successfully got data, exit loop
+          }
+        } catch (e) {
+          error = e;
+          continue; // Try next proxy
         }
       }
 
-      // Make request to backend API
-      const encodedUrl = encodeURIComponent(url);
-      const apiUrl = `${API_BASE_URL}?url=${encodedUrl}`;
-
-      const response = await fetch(apiUrl);
-
-      if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Failed to fetch song data" }));
-        throw new Error(
-          errorData.message ||
-            `Server responded with status: ${response.status}`
-        );
-      }
-
-      const songData = await response.json();
-
-      if (!songData || !songData.content) {
-        throw new Error("Could not retrieve song data");
+      if (!songData) {
+        throw error || new Error("Could not extract song data from the page");
       }
 
       // Display the formatted song
@@ -83,31 +86,126 @@ document.addEventListener("DOMContentLoaded", () => {
       scrollControls.classList.remove("hidden");
     } catch (error) {
       console.error("Error loading song:", error);
-      showError(`${error.message}. Try again later.`);
+      showError(
+        `${error.message}. Try using the example song URL or visit https://cors-anywhere.herokuapp.com/corsdemo for temporary access.`
+      );
     } finally {
       loadingIndicator.classList.add("hidden");
     }
   }
 
-  function extractSongIdFromUrl(url) {
-    // Try different patterns for Ultimate Guitar URLs
-    const patterns = [
-      /tabs\.ultimate-guitar\.com\/tab\/.*-(\d+)$/,
-      /tabs\.ultimate-guitar\.com\/tab\/.*-(\d+)[?#]/,
-      /ultimate-guitar\.com\/.*tab\/.*-(\d+)$/,
-      /tab\/[^/]+\/[^/]+\/[^/]+-(\d+)$/,
-    ];
+  function parseUltimateGuitarHtml(html, url) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
 
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) {
-        return match[1];
+      // Try multiple parsing strategies
+      let songData = null;
+
+      // Strategy 1: Look for JSON data in script tags
+      const scripts = doc.querySelectorAll("script");
+      for (const script of scripts) {
+        const content = script.textContent;
+
+        // Look for patterns that might contain song data
+        const dataMatches = [
+          content.match(/window\.UGAPP\.store\.page = (\{.+?\});/s),
+          content.match(/\{"store":\{"page":([^}]+}\})}/s),
+          content.match(/data: (\{.+?"tab":.+?\}),/s),
+        ];
+
+        for (const match of dataMatches) {
+          if (!match || !match[1]) continue;
+
+          try {
+            const parsedData = JSON.parse(match[1]);
+            const tab = parsedData.data?.tab || parsedData.tab;
+
+            if (tab) {
+              return {
+                title: tab.song_name || extractTitleFromUrl(url),
+                artist: tab.artist_name || "Unknown Artist",
+                content: tab.content || tab.wiki_tab?.content || "",
+                type: tab.type || "chords",
+              };
+            }
+          } catch (e) {
+            console.error("Error parsing script data:", e);
+          }
+        }
       }
-    }
 
-    // Last resort - look for any number at the end of URL
-    const lastResort = url.match(/(\d+)[^/]*$/);
-    return lastResort ? lastResort[1] : null;
+      // Strategy 2: Look for tab content in HTML
+      const tabContent = doc
+        .querySelector(".js-tab-content")
+        ?.getAttribute("data-content");
+      if (tabContent) {
+        try {
+          const content = decodeHTMLEntities(tabContent);
+          const title =
+            doc
+              .querySelector('meta[property="og:title"]')
+              ?.getAttribute("content") || extractTitleFromUrl(url);
+          const artist =
+            doc
+              .querySelector('meta[property="og:description"]')
+              ?.getAttribute("content") || "Unknown Artist";
+
+          return {
+            title: title.split(" by ")[0] || "Unknown Song",
+            artist: artist.split(" - ")[0] || "Unknown Artist",
+            content,
+            type: "chords",
+          };
+        } catch (e) {
+          console.error("Error parsing tab content:", e);
+        }
+      }
+
+      // Strategy 3: Extract from pre tag
+      const preContent = doc.querySelector(".js-tab-content")?.textContent;
+      if (preContent && preContent.length > 100) {
+        const title =
+          doc
+            .querySelector('meta[property="og:title"]')
+            ?.getAttribute("content") || extractTitleFromUrl(url);
+        const artist =
+          doc
+            .querySelector('meta[property="og:description"]')
+            ?.getAttribute("content") || "Unknown Artist";
+
+        return {
+          title: title.split(" by ")[0] || "Unknown Song",
+          artist: artist.split(" - ")[0] || "Unknown Artist",
+          content: preContent,
+          type: "chords",
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error parsing UG HTML:", error);
+      return null;
+    }
+  }
+
+  function decodeHTMLEntities(text) {
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+
+  function extractTitleFromUrl(url) {
+    try {
+      const parts = url.split("/");
+      const songPart = parts[parts.length - 1].split("-");
+
+      // Remove the ID at the end and join with spaces
+      songPart.pop();
+      return songPart.join(" ").replace(/-/g, " ");
+    } catch (e) {
+      return "Unknown Song";
+    }
   }
 
   function showError(message) {
@@ -125,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Mock content for development only
+  // Mock content for development/testing
   const mockContent = {
     bones: `[Intro]
 [ch]Em[/ch]    [ch]G[/ch]    [ch]D[/ch]    [ch]Em[/ch]
