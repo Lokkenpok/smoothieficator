@@ -474,7 +474,7 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
     songContent.appendChild(savedSongsDiv);
   }
 
-  // Check URL parameters for incoming song data or ID
+  // Check URL parameters for bookmarklet data
   function checkForBookmarkletData() {
     const urlParams = new URLSearchParams(window.location.search);
     const songData = urlParams.get("songData");
@@ -483,51 +483,66 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
     // Clear the URL parameters without refreshing the page
     window.history.replaceState({}, document.title, window.location.pathname);
 
-    // Handle direct song data (smaller songs)
+    // First try direct song data (smaller songs)
     if (songData) {
       try {
-        // Parse the song data
         const parsedData = JSON.parse(decodeURIComponent(songData));
         return processSongFromBookmarklet(parsedData);
       } catch (error) {
-        console.error("Error processing bookmarklet data:", error);
+        console.error("Error processing direct song data:", error);
         errorLoad.textContent = "Error processing song data: " + error.message;
         errorLoad.classList.remove("hidden");
       }
     }
-    // Handle song ID for larger songs
+    // Then try song ID (from sessionStorage or localStorage)
     else if (songId) {
       try {
-        // Get song data from localStorage
-        const storedData = localStorage.getItem(songId);
+        // First try to get from sessionStorage (preferred method)
+        let storedData = sessionStorage.getItem(songId);
+
+        // If not in sessionStorage, try localStorage
         if (!storedData) {
-          // Try to get from the opener window's localStorage
-          if (window.opener && !window.opener.closed) {
-            try {
-              const openerData = window.opener.localStorage.getItem(songId);
-              if (openerData) {
-                localStorage.setItem(songId, openerData);
-                const parsedData = JSON.parse(openerData);
-                return processSongFromBookmarklet(parsedData);
-              }
-            } catch (e) {
-              console.error("Error accessing opener's localStorage:", e);
+          storedData = localStorage.getItem(songId);
+        }
+
+        // If still not found, try window.opener's storage
+        if (!storedData && window.opener && !window.opener.closed) {
+          try {
+            // Try sessionStorage in the opener window
+            storedData = window.opener.sessionStorage.getItem(songId);
+
+            // If not there, try localStorage in the opener window
+            if (!storedData) {
+              storedData = window.opener.localStorage.getItem(songId);
             }
+          } catch (e) {
+            console.error("Error accessing opener's storage:", e);
           }
+        }
+
+        if (!storedData) {
           throw new Error(
-            "Song data not found. It may have expired or access was denied."
+            "Song data not found. It may have expired or browser security prevented access."
           );
         }
 
-        // Parse the song data
+        // Remove from storage to clean up
+        try {
+          sessionStorage.removeItem(songId);
+          localStorage.removeItem(songId);
+          if (window.opener && !window.opener.closed) {
+            window.opener.sessionStorage.removeItem(songId);
+            window.opener.localStorage.removeItem(songId);
+          }
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+
+        // Process the data
         const parsedData = JSON.parse(storedData);
-
-        // Remove the data from storage
-        localStorage.removeItem(songId);
-
         return processSongFromBookmarklet(parsedData);
       } catch (error) {
-        console.error("Error processing song from localStorage:", error);
+        console.error("Error processing song from storage:", error);
         errorLoad.textContent = "Error loading song: " + error.message;
         errorLoad.classList.remove("hidden");
       }
