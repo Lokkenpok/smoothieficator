@@ -474,58 +474,109 @@ console.log("✅ Song data copied to clipboard! Return to the teleprompter app a
     songContent.appendChild(savedSongsDiv);
   }
 
-  // Check URL parameters for incoming song data from bookmarklet
+  // Check URL parameters for incoming song data or ID
   function checkForBookmarkletData() {
     const urlParams = new URLSearchParams(window.location.search);
     const songData = urlParams.get("songData");
+    const songId = urlParams.get("songId");
 
+    // Clear the URL parameters without refreshing the page
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    // Handle direct song data (smaller songs)
     if (songData) {
       try {
-        // Clear the URL parameters without refreshing the page
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-
         // Parse the song data
         const parsedData = JSON.parse(decodeURIComponent(songData));
-
-        // Process content for display
-        let processedContent = parsedData.content;
-
-        // Clean up the content - handle escape sequences
-        processedContent = processedContent
-          .replace(/\\n/g, "\n")
-          .replace(/\\"/g, '"')
-          .replace(/\\t/g, "    ");
-
-        // Create the song object
-        const song = {
-          title: parsedData.title || "Unknown Song",
-          artist: parsedData.artist || "Unknown Artist",
-          content: processedContent,
-          type: parsedData.type || "Chords",
-        };
-
-        // Save to local storage with the current timestamp as key
-        const timestamp = new Date().toISOString();
-        localSongs[timestamp] = song;
-        localStorage.setItem("savedSongs", JSON.stringify(localSongs));
-
-        // Display the song
-        displaySong(song);
-
-        // Show scroll controls
-        scrollControls.classList.remove("hidden");
-        return true;
+        return processSongFromBookmarklet(parsedData);
       } catch (error) {
         console.error("Error processing bookmarklet data:", error);
         errorLoad.textContent = "Error processing song data: " + error.message;
         errorLoad.classList.remove("hidden");
       }
     }
+    // Handle song ID for larger songs
+    else if (songId) {
+      try {
+        // Get song data from localStorage
+        const storedData = localStorage.getItem(songId);
+        if (!storedData) {
+          // Try to get from the opener window's localStorage
+          if (window.opener && !window.opener.closed) {
+            try {
+              const openerData = window.opener.localStorage.getItem(songId);
+              if (openerData) {
+                localStorage.setItem(songId, openerData);
+                const parsedData = JSON.parse(openerData);
+                return processSongFromBookmarklet(parsedData);
+              }
+            } catch (e) {
+              console.error("Error accessing opener's localStorage:", e);
+            }
+          }
+          throw new Error(
+            "Song data not found. It may have expired or access was denied."
+          );
+        }
+
+        // Parse the song data
+        const parsedData = JSON.parse(storedData);
+
+        // Remove the data from storage
+        localStorage.removeItem(songId);
+
+        return processSongFromBookmarklet(parsedData);
+      } catch (error) {
+        console.error("Error processing song from localStorage:", error);
+        errorLoad.textContent = "Error loading song: " + error.message;
+        errorLoad.classList.remove("hidden");
+      }
+    }
     return false;
+  }
+
+  // Process song data from bookmarklet
+  function processSongFromBookmarklet(parsedData) {
+    if (!parsedData || !parsedData.content) {
+      errorLoad.textContent = "Invalid or missing song data";
+      errorLoad.classList.remove("hidden");
+      return false;
+    }
+
+    // Process content for display
+    let processedContent = parsedData.content;
+
+    // Clean up the content - handle escape sequences
+    processedContent = processedContent
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "")
+      .replace(/\\"/g, '"')
+      .replace(/\\t/g, "    ");
+
+    // If content doesn't have [ch] tags, process the chords
+    if (!processedContent.includes("[ch]")) {
+      processedContent = processChords(processedContent);
+    }
+
+    // Create the song object
+    const song = {
+      title: parsedData.title || "Unknown Song",
+      artist: parsedData.artist || "Unknown Artist",
+      content: processedContent,
+      type: parsedData.type || "Chords",
+    };
+
+    // Save to local storage with the current timestamp as key
+    const timestamp = new Date().toISOString();
+    localSongs[timestamp] = song;
+    localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+
+    // Display the song
+    displaySong(song);
+
+    // Show scroll controls
+    scrollControls.classList.remove("hidden");
+    return true;
   }
 
   // Handle displaying song content from either source
