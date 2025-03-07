@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Process the song content
     let content = song.content;
 
-    // Replace [ch] tags with spans for chord styling
+    // Replace [ch] tags with spans for chord styling, but preserve their original spacing
     content = content.replace(
       /\[ch\](.*?)\[\/ch\]/g,
       '<span class="chord">$1</span>'
@@ -67,13 +67,32 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
 
-    // Replace newlines with <br> for HTML display
-    content = content.replace(/\n/g, "<br>");
+    // Split content into lines to process for chord/lyric pairs
+    const lines = content.split("\n");
+    let processedHtml = "";
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Check if this line has chords (contains chord spans)
+      const hasChords = line.includes('<span class="chord">');
+
+      if (hasChords) {
+        // Preserve whitespace in chord lines for positioning
+        processedHtml += `<div class="chord-line" style="white-space: pre">${line}</div>`;
+      } else if (line.trim() === "") {
+        // Empty line becomes a spacer
+        processedHtml += '<div class="spacer"></div>';
+      } else {
+        // Regular lyrics line
+        processedHtml += `<div class="lyric-line">${line}</div>`;
+      }
+    }
 
     // Add the formatted content to the song content div
     const contentDiv = document.createElement("div");
     contentDiv.classList.add("song-body");
-    contentDiv.innerHTML = content;
+    contentDiv.innerHTML = processedHtml;
     songContent.appendChild(contentDiv);
 
     // Scroll to the top of the content
@@ -107,12 +126,14 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Add a button to manage saved songs
-  const controlsDiv = document.getElementById("controls");
-  const manageSongsButton = document.createElement("button");
-  manageSongsButton.textContent = "Manage Saved Songs";
-  manageSongsButton.classList.add("manage-songs-button");
-  manageSongsButton.addEventListener("click", showSavedSongs);
-  controlsDiv.appendChild(manageSongsButton);
+  const controlsDiv = document.querySelector(".controls-content");
+  if (controlsDiv) {
+    const manageSongsButton = document.createElement("button");
+    manageSongsButton.textContent = "Manage Saved Songs";
+    manageSongsButton.classList.add("manage-songs-button");
+    manageSongsButton.addEventListener("click", showSavedSongs);
+    controlsDiv.appendChild(manageSongsButton);
+  }
 
   // Function to display and manage saved songs
   function showSavedSongs() {

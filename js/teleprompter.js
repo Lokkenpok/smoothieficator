@@ -20,6 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const miniToggleFullscreenBtn = document.getElementById(
     "mini-toggle-fullscreen"
   );
+  const miniScrollSpeedInput = document.getElementById("mini-scroll-speed");
+  const miniSpeedValueDisplay = document.querySelector(".mini-speed-value");
 
   // Scroll state
   let isScrolling = false;
@@ -59,6 +61,32 @@ document.addEventListener("DOMContentLoaded", () => {
   scrollSpeedInput.addEventListener("input", () => {
     if (speedValueDisplay) {
       speedValueDisplay.textContent = scrollSpeedInput.value;
+    }
+
+    // Sync with mini slider
+    if (miniScrollSpeedInput) {
+      miniScrollSpeedInput.value = scrollSpeedInput.value;
+      if (miniSpeedValueDisplay) {
+        miniSpeedValueDisplay.textContent = scrollSpeedInput.value;
+      }
+    }
+
+    if (isScrolling) {
+      stopScrolling();
+      startScrolling();
+    }
+  });
+
+  // Update speed display when mini slider changes
+  miniScrollSpeedInput.addEventListener("input", () => {
+    if (miniSpeedValueDisplay) {
+      miniSpeedValueDisplay.textContent = miniScrollSpeedInput.value;
+    }
+
+    // Sync with main slider
+    scrollSpeedInput.value = miniScrollSpeedInput.value;
+    if (speedValueDisplay) {
+      speedValueDisplay.textContent = miniScrollSpeedInput.value;
     }
 
     if (isScrolling) {
@@ -253,6 +281,14 @@ document.addEventListener("DOMContentLoaded", () => {
           // Update display
           if (speedValueDisplay) {
             speedValueDisplay.textContent = num;
+          }
+
+          // Sync with mini slider
+          if (miniScrollSpeedInput) {
+            miniScrollSpeedInput.value = num;
+            if (miniSpeedValueDisplay) {
+              miniSpeedValueDisplay.textContent = num;
+            }
           }
 
           // Update scrolling if active

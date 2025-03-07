@@ -602,3 +602,44 @@ kbd {
   margin: 0;
   font-size: 1.1rem;
 }
+
+/* Mini controls styles */
+#mini-controls {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(42, 42, 42, 0.8);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+#mini-controls.visible {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#mini-controls button {
+  font-size: 0.8rem;
+  padding: 5px 10px;
+}
+
+.mini-scroll-speed-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mini-scroll-speed-container input[type="range"] {
+  width: 80px;
+}
+
+.mini-speed-value {
+  color: #ff6b6b;
+  font-weight: bold;
+  min-width: 15px;
+  text-align: center;
+}

@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
       pasteArea.style.color = "#fff";
       pasteArea.style.zIndex = "9999";
       pasteArea.placeholder =
-        "Paste the copied content from Ultimate Guitar here, then press Ctrl+Enter or click outside this box";
+        "Paste the copied content from Ultimate Guitar Print View here (https://tabs.ultimate-guitar.com/tab/print?...), then press Ctrl+Enter or click outside this box";
       document.body.appendChild(pasteArea);
 
       // Focus the textarea so the user can paste immediately
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
       createSong({
         title: title,
         artist: artist,
-        content: processChords(content),
+        content: processChords(content, true),
       });
 
       // Clear the form
@@ -102,42 +102,31 @@ document.addEventListener("DOMContentLoaded", function () {
       let title = "Unknown Song";
       let artist = "Unknown Artist";
 
-      // Find title and artist in the cleaned text
-      const titleMatch = cleanedContent.match(
-        /([^\n]+)\s+(?:Chords|Tabs)\s+by\s+([^\n]+)/i
-      );
-      if (titleMatch) {
-        title = titleMatch[1].trim();
-        artist = titleMatch[2].trim();
+      // The print view typically has a clean header with title and artist
+      const printViewTitleMatch = content.match(/^(.+?)\s*by\s*(.+?)\s*$/m);
+      if (printViewTitleMatch) {
+        title = printViewTitleMatch[1].trim();
+        artist = printViewTitleMatch[2].trim();
       } else {
-        // Second attempt: look for common Ultimate Guitar patterns
-        const titlePatterns = [
-          /^([^\n]+) by ([^\n]+)/i,
-          /^([^\n]+)\s*-\s*([^\n]+)/i,
-        ];
+        // Fallback to original title extraction methods
+        const titleMatch = cleanedContent.match(
+          /([^\n]+)\s+(?:Chords|Tabs)\s+by\s+([^\n]+)/i
+        );
+        if (titleMatch) {
+          title = titleMatch[1].trim();
+          artist = titleMatch[2].trim();
+        } else {
+          // Second attempt: look for common Ultimate Guitar patterns
+          const titlePatterns = [
+            /^([^\n]+) by ([^\n]+)/i,
+            /^([^\n]+)\s*-\s*([^\n]+)/i,
+          ];
 
-        for (const pattern of titlePatterns) {
-          const match = cleanedContent.match(pattern);
-          if (match) {
-            title = match[1].trim();
-            artist = match[2].trim();
-            break;
-          }
-        }
-
-        // If still not found, try to find the title in the first few lines
-        if (title === "Unknown Song") {
-          const lines = cleanedContent.split(/\r?\n/);
-          for (let i = 0; i < Math.min(10, lines.length); i++) {
-            const line = lines[i].trim();
-            if (
-              line &&
-              line.length > 3 &&
-              line.length < 100 &&
-              !line.match(/^\[/)
-            ) {
-              // Likely a title
-              title = line;
+          for (const pattern of titlePatterns) {
+            const match = cleanedContent.match(pattern);
+            if (match) {
+              title = match[1].trim();
+              artist = match[2].trim();
               break;
             }
           }
@@ -147,8 +136,8 @@ document.addEventListener("DOMContentLoaded", function () {
       // Clean up title if it has "tabs" or "chords" in it
       title = title.replace(/\s*(tabs|chords|tab|chord)\s*$/i, "").trim();
 
-      // Process the content to identify chords
-      const processedContent = processChords(cleanedContent);
+      // Process the content to identify chords with preserved positioning
+      const processedContent = processChords(cleanedContent, true);
 
       // Create a song object
       createSong({
@@ -166,6 +155,65 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Clean Ultimate Guitar pasted content to extract only tab/chord content
   function cleanUltimateGuitarContent(rawContent) {
+    // Check if this appears to be from the print view (simpler format)
+    const isPrintView =
+      rawContent.includes("https://tabs.ultimate-guitar.com/tab/print") ||
+      rawContent.match(/^.+?\s*by\s*.+?\s*$/m) ||
+      !rawContent.includes("Ultimate-Guitar.Com");
+
+    if (isPrintView) {
+      return cleanPrintViewContent(rawContent);
+    } else {
+      return cleanStandardViewContent(rawContent);
+    }
+  }
+
+  // Clean content specifically from the print view
+  function cleanPrintViewContent(rawContent) {
+    // Remove any HTML tags that might have been copied
+    let content = rawContent.replace(/<[^>]*>/g, "");
+
+    // Split into lines for processing
+    const lines = content.split(/\r?\n/);
+    const cleanedLines = [];
+
+    // Skip the first few lines if they contain URL or site info
+    let startIdx = 0;
+    while (
+      startIdx < lines.length &&
+      (lines[startIdx].includes("https://") ||
+        lines[startIdx].includes("ultimate-guitar") ||
+        !lines[startIdx].trim())
+    ) {
+      startIdx++;
+    }
+
+    // Process the rest of the content
+    for (let i = startIdx; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Skip empty lines at the beginning
+      if (cleanedLines.length === 0 && !line) {
+        continue;
+      }
+
+      // Skip footer lines
+      if (
+        line.includes("Ultimate Guitar") ||
+        (line.includes("UG") && line.length < 20) ||
+        line.match(/^\d+$/)
+      ) {
+        continue;
+      }
+
+      cleanedLines.push(lines[i]); // Keep original spacing for chord alignment
+    }
+
+    return cleanedLines.join("\n");
+  }
+
+  // Original cleaning function for the standard view
+  function cleanStandardViewContent(rawContent) {
     // Remove any HTML tags that might have been copied
     let content = rawContent.replace(/<[^>]*>/g, "");
 
@@ -272,17 +320,16 @@ document.addEventListener("DOMContentLoaded", function () {
     return cleanedLines.join("\n");
   }
 
-  // Process text to add chord tags
-  function processChords(text) {
+  // Process text to add chord tags - now with position preservation
+  function processChords(text, preservePosition = true) {
     // First split into lines
     const lines = text.split(/\r?\n/);
     const processedLines = [];
-
     let inTabBlock = false;
-    let inChordBlock = false;
 
     // Process each line
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       const trimmedLine = line.trim();
 
       // Handle tablature blocks differently - don't convert tabs to chords
@@ -315,34 +362,26 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      // Check if this is a line of just chord names (short line with multiple chord patterns)
-      const chordLine = trimmedLine.match(
-        /^([A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(\([^)]*\))?\s*)+$/
-      );
-      if (chordLine && trimmedLine.length < 40) {
-        inChordBlock = true;
-
-        // Split by spaces and add chord tags to each chord
-        const parts = trimmedLine.split(/\s+/);
-        const taggedParts = parts.map((part) => {
-          if (
-            part.match(
-              /^[A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(\([^)]*\))?$/
-            )
-          ) {
-            return `[ch]${part}[/ch]`;
-          }
-          return part;
-        });
-
-        processedLines.push(taggedParts.join(" "));
+      // Check for chord lines
+      // In the print view, chord lines are typically alone on their own line
+      // above the corresponding lyric line
+      if (
+        preservePosition &&
+        isChordOnlyLine(trimmedLine) &&
+        i + 1 < lines.length &&
+        lines[i + 1].trim().length > 0 &&
+        !isChordOnlyLine(lines[i + 1].trim())
+      ) {
+        // We need to preserve the spaces between chords
+        const chordLine = convertSpacedChordLine(line);
+        processedLines.push(chordLine);
         continue;
       }
 
-      // Otherwise, add chord tags to any chord patterns in normal lines
+      // Standard chord processing for mixed lines (lyrics with chords)
       const chordsRegex =
         /\b([A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(?:\([^)]*\))?)\b/g;
-      let processedLine = trimmedLine.replace(chordsRegex, "[ch]$1[/ch]");
+      let processedLine = line.replace(chordsRegex, "[ch]$1[/ch]");
 
       // Skip chord definition lines (like "Am = x02210")
       if (processedLine.includes(" = ") && processedLine.match(/\[ch\]/)) {
@@ -352,7 +391,53 @@ document.addEventListener("DOMContentLoaded", function () {
       processedLines.push(processedLine);
     }
 
+    // Special processing to handle pairs of chord/lyric lines
     return processedLines.join("\n");
+  }
+
+  // Check if a line contains only chord patterns (with possible spacing)
+  function isChordOnlyLine(line) {
+    if (!line || line.length === 0) return false;
+
+    // Remove all potential chords and spaces
+    const nonChordContent = line.replace(
+      /\s*[A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(\([^)]*\))?\s*/g,
+      ""
+    );
+
+    // If nothing remains, it was a chord-only line
+    return nonChordContent.length === 0;
+  }
+
+  // Convert a line with spaced chords to preserve positions
+  function convertSpacedChordLine(line) {
+    // Match all chord patterns
+    const chordRegex =
+      /[A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(\([^)]*\))?/g;
+    let result = line;
+    let match;
+    let offset = 0; // Track position offset from string modifications
+
+    // Replace each chord with tagged version while preserving position
+    while ((match = chordRegex.exec(line)) !== null) {
+      const chord = match[0];
+      const pos = match.index;
+
+      // Calculate the position considering the added tags and previous modifications
+      const taggedChord = `[ch]${chord}[/ch]`;
+      const posDiff = taggedChord.length - chord.length;
+
+      // Replace at exact position (accounting for all previous replacements)
+      result =
+        result.substring(0, pos + offset) +
+        taggedChord +
+        result.substring(pos + offset + chord.length);
+
+      // Keep track of total offset from all replacements
+      offset += posDiff;
+    }
+
+    return result;
   }
 
   // Create song and pass to the teleprompter
@@ -386,14 +471,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     infoOverlay.innerHTML = `
       <h3 style="margin-top:0;color:#ff6b6b">Cleaning Tips</h3>
-      <p>The pasted content is being cleaned to extract:</p>
-      <ul style="padding-left:20px;margin:10px 0">
-        <li>Song title and artist</li>
-        <li>Chords and chord diagrams</li>
-        <li>Lyrics and section markers</li>
-        <li>Tab notation</li>
-      </ul>
-      <p>All advertisements, navigation elements, and other website clutter will be removed.</p>
+      <p>For best results, use the Ultimate Guitar Print View:</p>
+      <ol style="padding-left:20px;margin:10px 0">
+        <li>Go to the Ultimate Guitar song page</li>
+        <li>Click the "Print" button at the top</li>
+        <li>In the print page, press Ctrl+A to select all content</li>
+        <li>Press Ctrl+C to copy</li>
+      </ol>
+      <p>This will preserve chord positions above lyrics for better readability.</p>
       <button id="close-info" style="background:#ff6b6b;border:none;padding:5px 10px;color:#fff;cursor:pointer;border-radius:3px;margin-top:5px">OK, Got it</button>
     `;
 
