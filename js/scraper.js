@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const teleprompter = document.getElementById("teleprompter");
 
   // API base URL - point this to your VPS endpoint
-  const API_BASE_URL = "https://your-vps-domain.com/api/song-data";
+  const API_BASE_URL = "https://37.27.181.3/api/song-data;
 
   loadButton.addEventListener("click", loadSong);
 
