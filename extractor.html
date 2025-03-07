@@ -264,22 +264,51 @@ console.log('✅ Song data copied! Paste it in the extractor window.');
           return;
         }
 
-        // Get base URL for teleprompter
-        const baseUrl = window.location.origin;
-        const teleprompterUrl = baseUrl + "/index.html";
+        try {
+          // Get the current location to build the correct teleprompter path
+          const currentPath = window.location.pathname;
+          // Remove "extractor.html" from the path to get the base directory
+          const basePath = currentPath.substring(
+            0,
+            currentPath.lastIndexOf("/") + 1
+          );
+          // Construct the teleprompter URL
+          const teleprompterUrl =
+            window.location.origin + basePath + "index.html";
 
-        // Encode data for URL
-        const encodedData = encodeURIComponent(JSON.stringify(extractedData));
+          // Encode data for URL
+          const encodedData = encodeURIComponent(JSON.stringify(extractedData));
 
-        // Open teleprompter with the extracted data
-        window.opener.location.href = `${teleprompterUrl}?songData=${encodedData}`;
+          // Show success message
+          statusElement.innerHTML =
+            '<span class="success">Opening teleprompter...</span>';
 
-        // Give feedback and close this window
-        statusElement.innerHTML =
-          '<span class="success">Opening teleprompter...</span>';
-        setTimeout(function () {
-          window.close();
-        }, 1000);
+          // Open the teleprompter in a new window
+          const teleprompterWindow = window.open(
+            `${teleprompterUrl}?songData=${encodedData}`,
+            "_blank"
+          );
+
+          // Check if the window was successfully opened
+          if (teleprompterWindow) {
+            // Close this window after a short delay
+            setTimeout(function () {
+              window.close();
+            }, 1000);
+          } else {
+            // If window.open was blocked by a popup blocker
+            statusElement.innerHTML = `
+              <span class="error">Popup blocked. Please click the link below:</span>
+              <p><a href="${teleprompterUrl}?songData=${encodedData}" target="_blank" 
+                 style="color:#ff6b6b;display:block;margin-top:10px;text-align:center;">
+                 Open in Teleprompter
+              </a></p>
+            `;
+          }
+        } catch (err) {
+          showError("Error opening teleprompter: " + err.message);
+          console.error(err);
+        }
       }
 
       // Set up button handler
