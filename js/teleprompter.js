@@ -221,56 +221,77 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load saved songs
   function loadSavedSongs() {
-    const localSongs = JSON.parse(localStorage.getItem("savedSongs") || "{}");
-    savedSongs = Object.values(localSongs);
+    const localStorageSongs = localStorage.getItem("savedSongs");
+    if (!localStorageSongs) return [];
+
+    const localSongs = JSON.parse(localStorageSongs);
+    // Convert from object to array with timestamps as keys
+    savedSongs = Object.entries(localSongs).map(([timestamp, song]) => ({
+      ...song,
+      timestamp,
+    }));
+
+    // Sort by timestamp (newest first)
+    savedSongs.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
     // If a song is currently displayed, find its index
     const currentTitle = document.querySelector(".song-header h2")?.textContent;
     const currentArtist = document
       .querySelector(".song-header h3")
-      ?.textContent?.replace("by ", "")
+      ?.textContent?.replace(/by\s+/i, "")
       .trim();
 
     if (currentTitle && currentArtist) {
       currentSongIndex = savedSongs.findIndex(
         (song) => song.title === currentTitle && song.artist === currentArtist
       );
+      console.log(
+        `Current song index: ${currentSongIndex} (${currentTitle} - ${currentArtist})`
+      );
     }
+
+    return savedSongs;
   }
 
   // Navigate to previous song
   function goToPreviousSong() {
-    if (savedSongs.length === 0) {
-      loadSavedSongs();
-      if (savedSongs.length === 0) return; // No songs saved
-    }
+    const songs = loadSavedSongs();
+    if (songs.length === 0) return; // No songs saved
 
     if (currentSongIndex <= 0) {
-      currentSongIndex = savedSongs.length - 1; // Wrap around to the last song
+      currentSongIndex = songs.length - 1; // Wrap around to the last song
     } else {
       currentSongIndex--;
     }
 
-    displaySong(savedSongs[currentSongIndex]);
+    console.log(
+      `Going to previous song: ${currentSongIndex} of ${songs.length}`
+    );
+    displaySavedSong(songs[currentSongIndex]);
   }
 
   // Navigate to next song
   function goToNextSong() {
-    if (savedSongs.length === 0) {
-      loadSavedSongs();
-      if (savedSongs.length === 0) return; // No songs saved
-    }
+    const songs = loadSavedSongs();
+    if (songs.length === 0) return; // No songs saved
 
-    if (currentSongIndex >= savedSongs.length - 1 || currentSongIndex === -1) {
+    if (currentSongIndex >= songs.length - 1 || currentSongIndex === -1) {
       currentSongIndex = 0; // Wrap around to the first song
     } else {
       currentSongIndex++;
     }
 
-    displaySong(savedSongs[currentSongIndex]);
+    console.log(`Going to next song: ${currentSongIndex} of ${songs.length}`);
+    displaySavedSong(songs[currentSongIndex]);
   }
 
-  // Display song (reuse the function from scraper.js)
-  function displaySong(song) {
+  // Display saved song (separate from the scraper.js function to avoid circular dependencies)
+  function displaySavedSong(songData) {
+    // Create a clean copy without the timestamp property
+    const song = { ...songData };
+    delete song.timestamp;
+
+    // Display the song using the existing function
     if (typeof window.processSongFromBookmarklet === "function") {
       window.processSongFromBookmarklet(song);
     }
@@ -363,28 +384,30 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
 
       case "ArrowLeft":
-        e.preventDefault();
-        // Navigate to previous song if we're in teleprompter view (not editing)
-        if (
-          document
-            .getElementById("song-content")
-            .contains(document.querySelector(".song-header"))
-        ) {
+        // Only handle left arrow for song navigation if in teleprompter view
+        // and not using it to scroll the page up/down
+        if (!document.querySelector(".saved-songs")) {
+          e.preventDefault();
           goToPreviousSong();
         }
         break;
 
       case "ArrowRight":
-        e.preventDefault();
-        // Navigate to next song if we're in teleprompter view (not editing)
-        if (
-          document
-            .getElementById("song-content")
-            .contains(document.querySelector(".song-header"))
-        ) {
+        // Only handle right arrow for song navigation if in teleprompter view
+        // and not using it to scroll the page up/down
+        if (!document.querySelector(".saved-songs")) {
+          e.preventDefault();
           goToNextSong();
         }
         break;
     }
+  }
+
+  // Update keyboard shortcuts display
+  const keyboardShortcuts = document.querySelector(".keyboard-shortcuts ul");
+  if (keyboardShortcuts) {
+    const navigationItem = document.createElement("li");
+    navigationItem.innerHTML = "<kbd>←</kbd><kbd>→</kbd> - Previous/Next song";
+    keyboardShortcuts.appendChild(navigationItem);
   }
 });
