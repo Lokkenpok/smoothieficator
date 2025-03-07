@@ -4,67 +4,77 @@ document.addEventListener("DOMContentLoaded", function () {
   // Get the current site URL for the teleprompter
   const teleprompterURL = window.location.origin + window.location.pathname;
 
-  // Create a super-compact bookmarklet that will work across browsers
+  // Create an ultra-minimal bookmarklet with simpler code structure
   const bookmarkletCode = `javascript:(function(){
-    if(!window.location.hostname.includes('ultimate-guitar.com')){alert('Only works on Ultimate Guitar');return;}
-    var t,a,c,s,id;
-    t=document.querySelector('h1')?document.querySelector('h1').innerText:'Unknown Song';
-    a=document.querySelector('[class*="artist"]')?document.querySelector('[class*="artist"]').innerText:'Unknown Artist';
     try{
-      // Show extraction indicator
-      var ind=document.createElement('div');
-      ind.style.position='fixed';ind.style.top='10px';ind.style.left='50%';
-      ind.style.transform='translateX(-50%)';ind.style.zIndex='9999';
-      ind.style.background='#ff6b6b';ind.style.color='white';
-      ind.style.padding='10px 20px';ind.style.borderRadius='4px';
-      ind.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)';
-      ind.textContent='Extracting song...';
-      document.body.appendChild(ind);
-      
-      // Extract content
-      c=window.UGAPP&&window.UGAPP.store&&window.UGAPP.store.page&&
-        window.UGAPP.store.page.data&&window.UGAPP.store.page.data.tab_view?
-        window.UGAPP.store.page.data.tab_view.wiki_tab.content:'';
-      if(!c){
-        var e=document.querySelector('.js-tab-content, pre.tab-content');
-        c=e?e.innerText:'';
+      if(!window.location.hostname.includes('ultimate-guitar.com')){
+        alert('Only works on Ultimate Guitar');
+        return;
       }
-      if(!c){alert('Could not extract song content');return;}
       
-      // Create unique ID for this song
-      id='ugSong_'+Math.random().toString(36).substring(2,10);
+      // Basic extraction
+      var t = document.querySelector('h1') ? document.querySelector('h1').innerText : 'Unknown Song';
+      var a = document.querySelector('[class*="artist"]') ? document.querySelector('[class*="artist"]').innerText : 'Unknown Artist';
+      var c = '';
       
-      // Create the song data object
-      s={title:t,artist:a,content:c,type:'Chords'};
+      // Get content from UGAPP store
+      if(window.UGAPP && window.UGAPP.store && window.UGAPP.store.page && window.UGAPP.store.page.data) {
+        c = window.UGAPP.store.page.data.tab_view.wiki_tab.content || '';
+      }
       
-      // Store song in localStorage
-      localStorage.setItem(id,JSON.stringify(s));
+      // Fallback to tab content
+      if(!c) {
+        var e = document.querySelector('.js-tab-content, pre.tab-content');
+        c = e ? e.innerText : '';
+      }
       
-      // Update indicator
-      ind.textContent='Opening teleprompter...';
-      ind.style.background='#4CAF50';
+      if(!c) {
+        alert('Could not extract song content');
+        return;
+      }
       
-      // Open teleprompter with ID reference instead of full content
-      window.open('${teleprompterURL}?songId='+id,'_blank');
+      // Simple and direct localStorage approach
+      var id = 'meatSong_' + Date.now();
+      localStorage.setItem(id, JSON.stringify({title:t, artist:a, content:c}));
       
-      // Set timeout to remove the stored song data after 5 minutes
-      setTimeout(function(){
-        localStorage.removeItem(id);
-      }, 300000); // 5 minutes
-    }catch(e){alert('Error: '+e.message);}
+      // Show success message
+      var msg = document.createElement('div');
+      msg.style = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9999;background:#4CAF50;color:white;padding:10px;border-radius:4px';
+      msg.textContent = 'Song extracted! Opening teleprompter...';
+      document.body.appendChild(msg);
+      
+      // Open teleprompter
+      window.open('${teleprompterURL}?songId=' + id, '_blank');
+    }catch(e){
+      alert('Error: ' + e.message);
+    }
   })();`;
 
-  // Set the href directly with the minimal bookmarklet code
+  // Set the href directly - no minification needed
   bookmarkletLink.setAttribute("href", bookmarkletCode);
+
+  // Add better visual styling for the bookmarklet
+  const container = document.querySelector(".bookmarklet-container");
+  container.innerHTML = `
+    <p><strong>Drag</strong> this button to your bookmarks bar:</p>
+    <div class="drag-instruction">
+      <a id="bookmarklet-link" href="#">Meat Smoothie</a>
+      <span class="drag-arrow">← Drag to bookmarks</span>
+    </div>
+    <p class="bookmarklet-instructions">
+      When viewing a song on Ultimate Guitar, click this bookmark to send it to the teleprompter.
+    </p>
+  `;
 
   // Re-select the link after changing the HTML
   const updatedLink = document.getElementById("bookmarklet-link");
+  updatedLink.setAttribute("href", bookmarkletCode);
 
   // Add warning when clicked instead of dragged
   updatedLink.addEventListener("click", function (e) {
     e.preventDefault();
     alert(
-      "Don't click this link - drag it to your browser's bookmarks bar instead. Then, when viewing an Ultimate Guitar tab, click the bookmark to extract the song."
+      "Don't click this link - drag it to your browser's bookmarks bar instead."
     );
   });
 });
