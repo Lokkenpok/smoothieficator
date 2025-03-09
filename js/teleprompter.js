@@ -39,6 +39,9 @@ document.addEventListener("DOMContentLoaded", () => {
       stopScrolling();
       startScrolling();
     }
+
+    // Save scroll speed for current song
+    saveScrollSpeedForCurrentSong();
   });
 
   // Keyboard controls
@@ -278,6 +281,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Function to save current scroll speed for the displayed song
+  function saveScrollSpeedForCurrentSong() {
+    const currentSpeed = parseInt(scrollSpeedInput.value);
+    // Check if we have a current song displayed and an updateSongScrollSpeed function
+    if (window.currentDisplayedSong) {
+      // Get current song title and artist
+      const currentTitle =
+        document.querySelector(".song-header h2")?.textContent;
+      const currentArtist = document
+        .querySelector(".song-header h3")
+        ?.textContent?.replace(/by\s+/i, "")
+        .trim();
+
+      if (currentTitle && currentArtist) {
+        // Try to find song in local storage
+        const savedSongs = JSON.parse(
+          localStorage.getItem("savedSongs") || "{}"
+        );
+        const entries = Object.entries(savedSongs);
+        const match = entries.find(
+          ([id, song]) =>
+            song.title === currentTitle && song.artist === currentArtist
+        );
+
+        if (match) {
+          const [id, song] = match;
+          // Update the song's scroll speed
+          song.scrollSpeed = currentSpeed;
+          savedSongs[id] = song;
+          localStorage.setItem("savedSongs", JSON.stringify(savedSongs));
+
+          // Update the reference if we have it
+          if (window.currentDisplayedSong) {
+            window.currentDisplayedSong.scrollSpeed = currentSpeed;
+          }
+        }
+      }
+    }
+  }
+
   // Handle keyboard controls
   function handleKeyDown(e) {
     // Don't capture key events when typing in input fields
@@ -361,6 +404,9 @@ document.addEventListener("DOMContentLoaded", () => {
             stopScrolling();
             startScrolling();
           }
+
+          // Save the scroll speed for current song
+          saveScrollSpeedForCurrentSong();
         }
         break;
 

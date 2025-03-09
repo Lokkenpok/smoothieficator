@@ -600,6 +600,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Create song and pass to the teleprompter
   function createSong(songData) {
+    // Add current scroll speed to the song data
+    const scrollSpeed = document.getElementById("scroll-speed");
+    if (scrollSpeed) {
+      songData.scrollSpeed = parseInt(scrollSpeed.value);
+    }
+
     // If scraper.js is available, use its function
     if (typeof window.processSongFromBookmarklet === "function") {
       window.processSongFromBookmarklet(songData);

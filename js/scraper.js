@@ -100,6 +100,19 @@ document.addEventListener("DOMContentLoaded", () => {
       teleprompter.scrollTop = 0;
     }
 
+    // Load saved scroll speed if available
+    if (song.scrollSpeed) {
+      const scrollSpeedInput = document.getElementById("scroll-speed");
+      const speedValueDisplay = document.querySelector(".speed-value");
+
+      if (scrollSpeedInput) {
+        scrollSpeedInput.value = song.scrollSpeed;
+        if (speedValueDisplay) {
+          speedValueDisplay.textContent = song.scrollSpeed;
+        }
+      }
+    }
+
     // Check if song already exists before saving
     // Don't save if this is triggered by keyboard navigation
     const isKeyboardNavigation = window.navigationInProgress === true;
@@ -117,7 +130,19 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Skipping save due to navigation event");
     } else if (songExistsInStorage(song)) {
       console.log("Skipping save because song already exists");
+
+      // Update the stored song's scroll speed if it changed
+      const currentScrollSpeed = document.getElementById("scroll-speed")?.value;
+      if (
+        currentScrollSpeed &&
+        song.scrollSpeed !== parseInt(currentScrollSpeed)
+      ) {
+        updateSongScrollSpeed(song, parseInt(currentScrollSpeed));
+      }
     }
+
+    // Store current song reference for scroll speed updates
+    window.currentDisplayedSong = song;
 
     // Dispatch event that song has loaded
     window.dispatchEvent(new CustomEvent("songLoaded"));
@@ -135,6 +160,28 @@ document.addEventListener("DOMContentLoaded", () => {
       (savedSong) =>
         savedSong.title === newSong.title && savedSong.artist === newSong.artist
     );
+  }
+
+  // Helper function to update a song's scroll speed in storage
+  function updateSongScrollSpeed(song, newSpeed) {
+    // Find the song in local storage and update its scroll speed
+    const entries = Object.entries(localSongs);
+    const match = entries.find(
+      ([id, savedSong]) =>
+        savedSong.title === song.title && savedSong.artist === song.artist
+    );
+
+    if (match) {
+      const [id, savedSong] = match;
+      savedSong.scrollSpeed = newSpeed;
+      localSongs[id] = savedSong;
+      localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+
+      // Update the current displayed song reference
+      if (window.currentDisplayedSong) {
+        window.currentDisplayedSong.scrollSpeed = newSpeed;
+      }
+    }
   }
 
   // Process song data from extraction tools
