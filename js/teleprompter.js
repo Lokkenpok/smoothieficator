@@ -7,33 +7,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const stopScrollBtn = document.getElementById("stop-scroll");
   const resetScrollBtn = document.getElementById("reset-scroll");
   const toggleFullscreenBtn = document.getElementById("toggle-fullscreen");
-  const backToExtractionBtn = document.getElementById("back-to-extraction");
   const appContainer = document.getElementById("app-container");
   const speedValueDisplay = document.querySelector(".speed-value");
-  const controls = document.getElementById("controls");
-  const toggleControlsBtn = document.getElementById("toggle-controls");
-
-  // Mini controls
-  const miniControls = document.getElementById("mini-controls");
-  const miniStartScrollBtn = document.getElementById("mini-start-scroll");
-  const miniStopScrollBtn = document.getElementById("mini-stop-scroll");
-  const miniResetScrollBtn = document.getElementById("mini-reset-scroll");
-  const miniToggleFullscreenBtn = document.getElementById(
-    "mini-toggle-fullscreen"
-  );
-  const miniBackToExtractionBtn = document.getElementById(
-    "mini-back-to-extraction"
-  );
-  const miniScrollSpeedInput = document.getElementById("mini-scroll-speed");
-  const miniSpeedValueDisplay = document.querySelector(".mini-speed-value");
+  const topBar = document.getElementById("top-bar");
 
   // Scroll state
   let isScrolling = false;
   let scrollInterval = null;
   const baseScrollSpeed = 1; // Base pixels per interval
-
-  // Controls state
-  let controlsCollapsed = false;
 
   // Song navigation state
   let savedSongs = [];
@@ -47,59 +28,11 @@ document.addEventListener("DOMContentLoaded", () => {
   stopScrollBtn.addEventListener("click", stopScrolling);
   resetScrollBtn.addEventListener("click", resetScroll);
   toggleFullscreenBtn.addEventListener("click", toggleFullscreen);
-  backToExtractionBtn.addEventListener("click", backToExtraction);
-
-  // Mini controls
-  miniStartScrollBtn.addEventListener("click", startScrolling);
-  miniStopScrollBtn.addEventListener("click", stopScrolling);
-  miniResetScrollBtn.addEventListener("click", resetScroll);
-  miniToggleFullscreenBtn.addEventListener("click", toggleFullscreen);
-  miniBackToExtractionBtn.addEventListener("click", backToExtraction);
-
-  // Toggle controls visibility
-  toggleControlsBtn.addEventListener("click", toggleControls);
-
-  // Also toggle when clicking the header
-  const compactHeader = document.querySelector(".compact-controls-header");
-  if (compactHeader) {
-    compactHeader.addEventListener("click", (e) => {
-      // Don't toggle if clicking the button itself
-      if (e.target !== toggleControlsBtn) {
-        toggleControls();
-      }
-    });
-  }
 
   // Update speed display when slider changes
   scrollSpeedInput.addEventListener("input", () => {
     if (speedValueDisplay) {
       speedValueDisplay.textContent = scrollSpeedInput.value;
-    }
-
-    // Sync with mini slider
-    if (miniScrollSpeedInput) {
-      miniScrollSpeedInput.value = scrollSpeedInput.value;
-      if (miniSpeedValueDisplay) {
-        miniSpeedValueDisplay.textContent = scrollSpeedInput.value;
-      }
-    }
-
-    if (isScrolling) {
-      stopScrolling();
-      startScrolling();
-    }
-  });
-
-  // Update speed display when mini slider changes
-  miniScrollSpeedInput.addEventListener("input", () => {
-    if (miniSpeedValueDisplay) {
-      miniSpeedValueDisplay.textContent = miniScrollSpeedInput.value;
-    }
-
-    // Sync with main slider
-    scrollSpeedInput.value = miniScrollSpeedInput.value;
-    if (speedValueDisplay) {
-      speedValueDisplay.textContent = miniScrollSpeedInput.value;
     }
 
     if (isScrolling) {
@@ -114,45 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Handle song loaded event
   window.addEventListener("songLoaded", function () {
     resetScroll();
-
-    // Auto-collapse controls when a song is loaded
-    if (!controlsCollapsed) {
-      toggleControls();
-    }
-
     loadSavedSongs(); // Update the saved songs array and current index
   });
-
-  // Function to return to extraction screen
-  function backToExtraction() {
-    // Clear the current song display
-    songContent.innerHTML = "";
-
-    // Hide scroll controls
-    const scrollControls = document.getElementById("scroll-controls");
-    if (scrollControls) {
-      scrollControls.classList.add("hidden");
-    }
-
-    // Show extraction tool
-    const extractionTool = document.querySelector(".extract-tool-container");
-    if (extractionTool) {
-      extractionTool.classList.remove("hidden");
-    }
-
-    // Hide mini controls as we're no longer in song view
-    miniControls.classList.remove("visible");
-
-    // Stop scrolling if it was active
-    if (isScrolling) {
-      stopScrolling();
-    }
-
-    // If controls were collapsed, expand them for better access to the extraction tools
-    if (controlsCollapsed) {
-      toggleControls();
-    }
-  }
 
   function startScrolling() {
     if (isScrolling) return;
@@ -163,10 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show stop button, hide start button
     startScrollBtn.classList.add("hidden");
     stopScrollBtn.classList.remove("hidden");
-
-    // Also update mini controls
-    miniStartScrollBtn.classList.add("hidden");
-    miniStopScrollBtn.classList.remove("hidden");
 
     // Start scrolling at the calculated speed
     scrollInterval = setInterval(() => {
@@ -191,10 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show start button, hide stop button
     startScrollBtn.classList.remove("hidden");
     stopScrollBtn.classList.add("hidden");
-
-    // Also update mini controls
-    miniStartScrollBtn.classList.remove("hidden");
-    miniStopScrollBtn.classList.add("hidden");
   }
 
   function resetScroll() {
@@ -230,46 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
         .requestFullscreen()
         .then(() => {
           appContainer.classList.add("fullscreen");
-          // Auto-collapse controls in fullscreen
-          if (!controlsCollapsed) {
-            toggleControls();
-          }
         })
         .catch((err) => {
           console.error(
             `Error attempting to enable fullscreen: ${err.message}`
           );
         });
-    }
-  }
-
-  function toggleControls() {
-    controlsCollapsed = !controlsCollapsed;
-
-    if (controlsCollapsed) {
-      controls.classList.add("collapsed");
-      teleprompter.classList.add("expanded");
-      toggleControlsBtn.textContent = "Show Controls";
-      miniControls.classList.add("visible");
-
-      // Update saved songs view if it's currently showing
-      const savedSongs = songContent.querySelector(".saved-songs");
-      if (savedSongs) {
-        savedSongs.classList.remove("with-expanded-controls");
-        savedSongs.classList.add("with-collapsed-controls");
-      }
-    } else {
-      controls.classList.remove("collapsed");
-      teleprompter.classList.remove("expanded");
-      toggleControlsBtn.textContent = "Hide Controls";
-      miniControls.classList.remove("visible");
-
-      // Update saved songs view if it's currently showing
-      const savedSongs = songContent.querySelector(".saved-songs");
-      if (savedSongs) {
-        savedSongs.classList.remove("with-collapsed-controls");
-        savedSongs.classList.add("with-expanded-controls");
-      }
     }
   }
 
@@ -356,6 +210,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 500); // Increased timeout
   }
 
+  // Make goToPreviousSong available globally for the navigation buttons
+  window.goToPreviousSong = goToPreviousSong;
+
   // Navigate to next song
   function goToNextSong() {
     const songs = loadSavedSongs();
@@ -389,6 +246,9 @@ document.addEventListener("DOMContentLoaded", () => {
       window.navigationInProgress = false;
     }, 100);
   }
+
+  // Make goToNextSong available globally for the navigation buttons
+  window.goToNextSong = goToNextSong;
 
   // Helper function to get unique songs by title and artist
   function getUniqueSongs(songs) {
@@ -455,24 +315,25 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleFullscreen();
         break;
 
-      case "c":
-      case "C":
-        // Toggle controls
-        toggleControls();
-        break;
-
-      case "b":
-      case "B":
-        // Return to extraction screen
-        e.preventDefault();
-        backToExtraction();
-        break;
-
       case "Escape":
         if (document.fullscreenElement) {
           document.exitFullscreen().then(() => {
             appContainer.classList.remove("fullscreen");
           });
+        } else {
+          // Close any open dropdowns
+          const dropdowns = document.querySelectorAll(
+            ".dropdown-content:not(.hidden)"
+          );
+          if (dropdowns.length > 0) {
+            dropdowns.forEach((dropdown) => dropdown.classList.add("hidden"));
+          }
+
+          // Close shortcuts popup if open
+          const shortcutsPopup = document.getElementById("shortcuts-popup");
+          if (shortcutsPopup && !shortcutsPopup.classList.contains("hidden")) {
+            shortcutsPopup.classList.add("hidden");
+          }
         }
         break;
 
@@ -495,14 +356,6 @@ document.addEventListener("DOMContentLoaded", () => {
             speedValueDisplay.textContent = num;
           }
 
-          // Sync with mini slider
-          if (miniScrollSpeedInput) {
-            miniScrollSpeedInput.value = num;
-            if (miniSpeedValueDisplay) {
-              miniSpeedValueDisplay.textContent = num;
-            }
-          }
-
           // Update scrolling if active
           if (isScrolling) {
             stopScrolling();
@@ -513,34 +366,74 @@ document.addEventListener("DOMContentLoaded", () => {
 
       case "ArrowLeft":
         // Check if we're in the song view and not on the saved songs list
-        if (!songContent.querySelector(".saved-songs")) {
-          console.log("Left arrow pressed in song view");
-          e.preventDefault();
-          goToPreviousSong();
-        }
+        e.preventDefault();
+        goToPreviousSong();
         break;
 
       case "ArrowRight":
         // Check if we're in the song view and not on the saved songs list
-        if (!songContent.querySelector(".saved-songs")) {
-          console.log("Right arrow pressed in song view");
-          e.preventDefault();
-          goToNextSong();
+        e.preventDefault();
+        goToNextSong();
+        break;
+
+      case "E":
+      case "e":
+        // Toggle extraction dropdown
+        e.preventDefault();
+        const extractDropdownContent = document.querySelector(
+          "#extract-dropdown .dropdown-content"
+        );
+        if (extractDropdownContent) {
+          extractDropdownContent.classList.toggle("hidden");
+          // Close other dropdowns
+          const savedSongsDropdown = document.querySelector(
+            "#songs-dropdown .dropdown-content"
+          );
+          if (
+            savedSongsDropdown &&
+            !savedSongsDropdown.classList.contains("hidden")
+          ) {
+            savedSongsDropdown.classList.add("hidden");
+          }
+        }
+        break;
+
+      case "S":
+      case "s":
+        // Toggle saved songs dropdown
+        e.preventDefault();
+        const savedSongsDropdown = document.querySelector(
+          "#songs-dropdown .dropdown-content"
+        );
+        if (savedSongsDropdown) {
+          savedSongsDropdown.classList.toggle("hidden");
+          // Update the saved songs list
+          if (!savedSongsDropdown.classList.contains("hidden")) {
+            const event = new Event("click");
+            document.getElementById("saved-songs-button").dispatchEvent(event);
+          }
+          // Close other dropdowns
+          const extractDropdownContent = document.querySelector(
+            "#extract-dropdown .dropdown-content"
+          );
+          if (
+            extractDropdownContent &&
+            !extractDropdownContent.classList.contains("hidden")
+          ) {
+            extractDropdownContent.classList.add("hidden");
+          }
+        }
+        break;
+
+      case "K":
+      case "k":
+        // Show keyboard shortcuts
+        e.preventDefault();
+        const shortcutsPopup = document.getElementById("shortcuts-popup");
+        if (shortcutsPopup) {
+          shortcutsPopup.classList.toggle("hidden");
         }
         break;
     }
-  }
-
-  // Update keyboard shortcuts display
-  const keyboardShortcuts = document.querySelector(".keyboard-shortcuts ul");
-  if (keyboardShortcuts) {
-    const navigationItem = document.createElement("li");
-    navigationItem.innerHTML = "<kbd>←</kbd><kbd>→</kbd> - Previous/Next song";
-    keyboardShortcuts.appendChild(navigationItem);
-
-    // Add shortcut for the back to extraction function
-    const backToExtractionItem = document.createElement("li");
-    backToExtractionItem.innerHTML = "<kbd>B</kbd> - Back to Extraction";
-    keyboardShortcuts.appendChild(backToExtractionItem);
   }
 });

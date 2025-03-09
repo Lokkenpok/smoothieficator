@@ -95,8 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
     contentDiv.innerHTML = processedHtml;
     songContent.appendChild(contentDiv);
 
-    // Scroll to the top of the content
-    teleprompter.scrollTop = 0;
+    // Safely scroll to the top of the content if teleprompter exists
+    if (teleprompter) {
+      teleprompter.scrollTop = 0;
+    }
 
     // Check if song already exists before saving
     // Don't save if this is triggered by keyboard navigation
@@ -108,6 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const timestamp = new Date().toISOString();
       localSongs[timestamp] = song;
       localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+
+      // Refresh the saved songs list if it's currently open
+      updateSavedSongsDropdown();
     } else if (isKeyboardNavigation) {
       console.log("Skipping save due to navigation event");
     } else if (songExistsInStorage(song)) {
@@ -117,8 +122,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Dispatch event that song has loaded
     window.dispatchEvent(new CustomEvent("songLoaded"));
 
-    // Make sure mini controls are visible
-    document.getElementById("mini-controls").classList.add("visible");
+    // Make sure mini controls are visible if they exist
+    const miniControls = document.getElementById("mini-controls");
+    if (miniControls) {
+      miniControls.classList.add("visible");
+    }
   }
 
   // Helper function to check if song already exists in storage
@@ -139,8 +147,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Display the song
     displaySong(songData);
 
-    // Show scroll controls
-    scrollControls.classList.remove("hidden");
+    // Show scroll controls if they exist
+    if (scrollControls) {
+      scrollControls.classList.remove("hidden");
+    }
+
     return true;
   };
 
@@ -288,5 +299,125 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     songContent.appendChild(savedSongsDiv);
+  }
+
+  // Saved songs dropdown functionality
+  const savedSongsBtn = document.getElementById("saved-songs-button");
+  const songsDropdownContent = document.querySelector(
+    "#songs-dropdown .dropdown-content"
+  );
+  const savedSongsContainer = document.getElementById("saved-songs-container");
+
+  if (savedSongsBtn && songsDropdownContent) {
+    savedSongsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      songsDropdownContent.classList.toggle("hidden");
+
+      // Update the saved songs list
+      updateSavedSongsDropdown();
+
+      // Close other dropdowns
+      const extractDropdownContent = document.querySelector(
+        "#extract-dropdown .dropdown-content"
+      );
+      if (
+        extractDropdownContent &&
+        !extractDropdownContent.classList.contains("hidden")
+      ) {
+        extractDropdownContent.classList.add("hidden");
+      }
+
+      // Close shortcuts popup if open
+      const shortcutsPopup = document.getElementById("shortcuts-popup");
+      if (shortcutsPopup && !shortcutsPopup.classList.contains("hidden")) {
+        shortcutsPopup.classList.add("hidden");
+      }
+    });
+  }
+
+  // Initialize navigation buttons
+  const prevSongBtn = document.getElementById("prev-song");
+  const nextSongBtn = document.getElementById("next-song");
+
+  if (prevSongBtn) {
+    prevSongBtn.addEventListener("click", () => {
+      if (typeof window.goToPreviousSong === "function") {
+        window.goToPreviousSong();
+      }
+    });
+  }
+
+  if (nextSongBtn) {
+    nextSongBtn.addEventListener("click", () => {
+      if (typeof window.goToNextSong === "function") {
+        window.goToNextSong();
+      }
+    });
+  }
+
+  // Update the saved songs dropdown content
+  function updateSavedSongsDropdown() {
+    if (!savedSongsContainer) return;
+
+    const savedSongsData = JSON.parse(
+      localStorage.getItem("savedSongs") || "{}"
+    );
+    savedSongsContainer.innerHTML = "";
+
+    const header = document.createElement("div");
+    header.classList.add("songs-header");
+    header.innerHTML = `<h3>Saved Songs</h3>`;
+    savedSongsContainer.appendChild(header);
+
+    const savedSongsEntries = Object.entries(savedSongsData);
+
+    if (savedSongsEntries.length === 0) {
+      const noSongs = document.createElement("p");
+      noSongs.textContent =
+        "No songs saved yet. Extract a song to save it automatically.";
+      noSongs.style.padding = "10px 5px";
+      savedSongsContainer.appendChild(noSongs);
+    } else {
+      const songsList = document.createElement("ul");
+      songsList.classList.add("songs-list");
+
+      // Sort by newest first
+      savedSongsEntries.sort((a, b) => b[0].localeCompare(a[0]));
+
+      savedSongsEntries.forEach(([id, song]) => {
+        const songItem = document.createElement("li");
+
+        const songTitle = document.createElement("span");
+        songTitle.textContent = `${song.title} - ${song.artist}`;
+        songTitle.title = `${song.title} - ${song.artist}`; // Add tooltip for long titles
+        songItem.appendChild(songTitle);
+
+        const loadButton = document.createElement("button");
+        loadButton.textContent = "Load";
+        loadButton.addEventListener("click", () => {
+          displaySong(song);
+          songsDropdownContent.classList.add("hidden");
+        });
+        songItem.appendChild(loadButton);
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "X";
+        deleteButton.classList.add("delete-button");
+        deleteButton.title = "Delete Song";
+        deleteButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete "${song.title}" from saved songs?`)) {
+            delete localSongs[id];
+            localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+            updateSavedSongsDropdown(); // Refresh the list
+          }
+        });
+        songItem.appendChild(deleteButton);
+
+        songsList.appendChild(songItem);
+      });
+
+      savedSongsContainer.appendChild(songsList);
+    }
   }
 });

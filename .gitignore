@@ -1,6 +1,9 @@
 # Server directory - keep this private
 server/
 
+# Password file - keep this private
+password.txt
+
 # Node.js dependencies
 node_modules/
 npm-debug.log

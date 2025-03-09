@@ -18,6 +18,61 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // Dropdown toggle
+  const extractDropdownBtn = document.querySelector(
+    "#extract-dropdown .dropdown-button"
+  );
+  const extractDropdownContent = document.querySelector(
+    "#extract-dropdown .dropdown-content"
+  );
+
+  if (extractDropdownBtn && extractDropdownContent) {
+    extractDropdownBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      extractDropdownContent.classList.toggle("hidden");
+
+      // Close other dropdowns
+      const savedSongsDropdown = document.querySelector(
+        "#songs-dropdown .dropdown-content"
+      );
+      if (
+        savedSongsDropdown &&
+        !savedSongsDropdown.classList.contains("hidden")
+      ) {
+        savedSongsDropdown.classList.add("hidden");
+      }
+
+      // Close shortcuts popup if open
+      const shortcutsPopup = document.getElementById("shortcuts-popup");
+      if (shortcutsPopup && !shortcutsPopup.classList.contains("hidden")) {
+        shortcutsPopup.classList.add("hidden");
+      }
+    });
+  }
+
+  // Close dropdowns when clicking elsewhere
+  document.addEventListener("click", (e) => {
+    const dropdowns = document.querySelectorAll(".dropdown-content");
+    dropdowns.forEach((dropdown) => {
+      if (
+        !dropdown.contains(e.target) &&
+        !e.target.closest(".dropdown-button")
+      ) {
+        dropdown.classList.add("hidden");
+      }
+    });
+
+    // Also close shortcuts popup
+    const shortcutsPopup = document.getElementById("shortcuts-popup");
+    if (
+      shortcutsPopup &&
+      !shortcutsPopup.classList.contains("hidden") &&
+      !e.target.closest("#show-shortcuts")
+    ) {
+      shortcutsPopup.classList.add("hidden");
+    }
+  });
+
   // Copy-paste extraction method
   const extractButton = document.getElementById("extract-button");
   if (extractButton) {
@@ -28,43 +83,117 @@ document.addEventListener("DOMContentLoaded", function () {
         showExtractionInfo();
       }
 
+      // Create a container for paste area and button
+      const pasteContainer = document.createElement("div");
+      pasteContainer.style.position = "fixed";
+      pasteContainer.style.left = "0";
+      pasteContainer.style.top = "0";
+      pasteContainer.style.width = "100%";
+      pasteContainer.style.height = "100%";
+      pasteContainer.style.background = "#1a1a1a";
+      pasteContainer.style.zIndex = "9999";
+      pasteContainer.style.display = "flex";
+      pasteContainer.style.flexDirection = "column";
+      document.body.appendChild(pasteContainer);
+
       // Create a textarea for the user to paste into
       const pasteArea = document.createElement("textarea");
-      pasteArea.style.position = "fixed";
-      pasteArea.style.left = "0";
-      pasteArea.style.top = "0";
       pasteArea.style.width = "100%";
-      pasteArea.style.height = "100%";
+      pasteArea.style.height = "calc(100% - 60px)";
       pasteArea.style.padding = "20px";
       pasteArea.style.background = "#1a1a1a";
       pasteArea.style.color = "#fff";
-      pasteArea.style.zIndex = "9999";
+      pasteArea.style.border = "none";
+      pasteArea.style.resize = "none";
+      pasteArea.style.outline = "none";
+      pasteArea.style.boxSizing = "border-box";
       pasteArea.placeholder =
-        "Paste the copied content from Ultimate Guitar Print View here (https://tabs.ultimate-guitar.com/tab/print?...), then press Ctrl+Enter or click outside this box";
-      document.body.appendChild(pasteArea);
+        "Paste the copied content from Ultimate Guitar Print View here (https://tabs.ultimate-guitar.com/tab/print?...), then press Ctrl+Enter or click the Confirm button below";
+      pasteContainer.appendChild(pasteArea);
+
+      // Create a button container
+      const buttonContainer = document.createElement("div");
+      buttonContainer.style.padding = "10px 20px";
+      buttonContainer.style.textAlign = "center";
+
+      // Create confirm button
+      const confirmButton = document.createElement("button");
+      confirmButton.textContent = "Confirm";
+      confirmButton.style.padding = "10px 20px";
+      confirmButton.style.margin = "0 10px";
+      confirmButton.style.backgroundColor = "#4CAF50"; // Green
+      confirmButton.style.color = "white";
+      confirmButton.style.border = "none";
+      confirmButton.style.borderRadius = "4px";
+      confirmButton.style.cursor = "pointer";
+      confirmButton.style.fontSize = "16px";
+
+      // Create cancel button
+      const cancelButton = document.createElement("button");
+      cancelButton.textContent = "Cancel";
+      cancelButton.style.padding = "10px 20px";
+      cancelButton.style.margin = "0 10px";
+      cancelButton.style.backgroundColor = "#f44336"; // Red
+      cancelButton.style.color = "white";
+      cancelButton.style.border = "none";
+      cancelButton.style.borderRadius = "4px";
+      cancelButton.style.cursor = "pointer";
+      cancelButton.style.fontSize = "16px";
+
+      // Add buttons to container
+      buttonContainer.appendChild(confirmButton);
+      buttonContainer.appendChild(cancelButton);
+      pasteContainer.appendChild(buttonContainer);
 
       // Focus the textarea so the user can paste immediately
       pasteArea.focus();
 
-      // Add event listeners
-      pasteArea.addEventListener("blur", () => {
+      // Use a flag to track if the textarea has been removed
+      let isRemoved = false;
+
+      // Function to process the content and remove the paste container
+      const processContent = () => {
+        if (isRemoved) return;
+
         const content = pasteArea.value;
-        document.body.removeChild(pasteArea);
+        isRemoved = true;
+        document.body.removeChild(pasteContainer);
+
         if (content) {
           processClipboardContent(content);
         }
-      });
+      };
+
+      // Function to just remove the paste container
+      const cancelPaste = () => {
+        if (isRemoved) return;
+
+        isRemoved = true;
+        document.body.removeChild(pasteContainer);
+      };
+
+      // Add event listeners
+      confirmButton.addEventListener("click", processContent);
+      cancelButton.addEventListener("click", cancelPaste);
 
       pasteArea.addEventListener("keydown", (e) => {
         // Ctrl+Enter to confirm
         if (e.ctrlKey && e.key === "Enter") {
-          const content = pasteArea.value;
-          document.body.removeChild(pasteArea);
-          if (content) {
-            processClipboardContent(content);
-          }
+          processContent();
+        }
+        // Escape to cancel
+        if (e.key === "Escape") {
+          cancelPaste();
         }
       });
+
+      // Hide the dropdown after clicking the button
+      const extractDropdownContent = document.querySelector(
+        "#extract-dropdown .dropdown-content"
+      );
+      if (extractDropdownContent) {
+        extractDropdownContent.classList.add("hidden");
+      }
     });
   }
 
@@ -91,6 +220,31 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("song-title").value = "";
       document.getElementById("song-artist").value = "";
       document.getElementById("song-content-input").value = "";
+
+      // Hide the dropdown after creating the song
+      const extractDropdownContent = document.querySelector(
+        "#extract-dropdown .dropdown-content"
+      );
+      if (extractDropdownContent) {
+        extractDropdownContent.classList.add("hidden");
+      }
+    });
+  }
+
+  // Show keyboard shortcuts popup
+  const showShortcutsBtn = document.getElementById("show-shortcuts");
+  const shortcutsPopup = document.getElementById("shortcuts-popup");
+
+  if (showShortcutsBtn && shortcutsPopup) {
+    showShortcutsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      shortcutsPopup.classList.toggle("hidden");
+
+      // Close any open dropdowns
+      const dropdowns = document.querySelectorAll(".dropdown-content");
+      dropdowns.forEach((dropdown) => {
+        dropdown.classList.add("hidden");
+      });
     });
   }
 
@@ -381,8 +535,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       // Standard chord processing for mixed lines (lyrics with chords)
+      // Enhanced regex to match more complex chord formats
       const chordsRegex =
-        /\b([A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(?:\([^)]*\))?)\b/g;
+        /\b([A-G][#b]?(?:m|maj|min|dim|sus|aug|add|M)?(?:[\d\/]+)?(?:[^\s]*)?(?:\([^)]*\))?)\b/g;
       let processedLine = line.replace(chordsRegex, "[ch]$1[/ch]");
 
       // Skip chord definition lines (like "Am = x02210")
@@ -402,8 +557,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!line || line.length === 0) return false;
 
     // Remove all potential chords and spaces
+    // Enhanced pattern to match more complex chord formats
     const nonChordContent = line.replace(
-      /\s*[A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(\([^)]*\))?\s*/g,
+      /\s*[A-G][#b]?(?:m|maj|min|dim|sus|aug|add|M)?(?:[\d\/]+)?(?:[^\s]*)?(?:\([^)]*\))?\s*/g,
       ""
     );
 
@@ -413,9 +569,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Convert a line with spaced chords to preserve positions
   function convertSpacedChordLine(line) {
-    // Match all chord patterns
+    // Match all chord patterns - enhanced to catch more variations
     const chordRegex =
-      /[A-G][#b]?(m|maj|min|dim|sus|aug|add|2|4|5|6|7|9|11|13)?(\([^)]*\))?/g;
+      /[A-G][#b]?(?:m|maj|min|dim|sus|aug|add|M)?(?:[\d\/]+)?(?:[^\s]*)?(?:\([^)]*\))?/g;
     let result = line;
     let match;
     let offset = 0; // Track position offset from string modifications
@@ -472,7 +628,7 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
 
     infoOverlay.innerHTML = `
-      <h3 style="margin-top:0;color:#ff6b6b">Cleaning Tips</h3>
+      <h3 style="margin-top:0;color:#ffc107">Cleaning Tips</h3>
       <p>For best results, use the Ultimate Guitar Print View:</p>
       <ol style="padding-left:20px;margin:10px 0">
         <li>Go to the Ultimate Guitar song page</li>
@@ -481,7 +637,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <li>Press Ctrl+C to copy</li>
       </ol>
       <p>This will preserve chord positions above lyrics for better readability.</p>
-      <button id="close-info" style="background:#ff6b6b;border:none;padding:5px 10px;color:#fff;cursor:pointer;border-radius:3px;margin-top:5px">OK, Got it</button>
+      <button id="close-info" style="background:#ffc107;border:none;padding:5px 10px;color:#1a1a1a;cursor:pointer;border-radius:3px;margin-top:5px">OK, Got it</button>
     `;
 
     document.body.appendChild(infoOverlay);

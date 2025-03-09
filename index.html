@@ -3,36 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Meat Smoothie Teleprompter</title>
+    <title>Smoothieficator</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
   </head>
   <body>
-    <div id="login-container">
-      <div class="login-box">
-        <h1>Meat Smoothie</h1>
-        <h2>Band Teleprompter</h2>
-        <div id="password-form">
-          <input
-            type="password"
-            id="password-input"
-            placeholder="Enter band password"
-          />
-          <button id="login-button">Enter</button>
+    <div id="app-container">
+      <!-- New unified top bar -->
+      <div id="top-bar">
+        <div class="logo-section">
+          <h1>Smoothieficator</h1>
         </div>
-        <div id="error-message" class="hidden">
-          Incorrect password. Try again!
-        </div>
-      </div>
-    </div>
-    <div id="app-container" class="hidden">
-      <div id="controls">
-        <div class="compact-controls-header">
-          <h1>Meat Smoothie Teleprompter</h1>
-          <button id="toggle-controls">Show Controls</button>
-        </div>
-        <div class="controls-content">
-          <div class="extract-tool-container compact">
-            <h3>Song Extraction</h3>
+
+        <!-- Song extraction dropdown -->
+        <div class="dropdown" id="extract-dropdown">
+          <button class="dropdown-button">
+            <i class="fas fa-music"></i> Extract Song
+            <i class="fas fa-caret-down"></i>
+          </button>
+          <div class="dropdown-content hidden">
             <div class="tabs">
               <button class="tab-button active" data-tab="copy-paste">
                 Copy-Paste
@@ -42,12 +34,10 @@
               </button>
             </div>
 
-            <!-- Replace the tab-content divs with a simpler structure -->
-            <div class="button-row" id="copy-paste-content">
+            <div id="copy-paste-content">
               <button id="extract-button" class="primary-button compact-button">
                 Extract Song from Clipboard
               </button>
-              <!-- The Manage Saved Songs button will be inserted here by scraper.js -->
             </div>
 
             <div class="form-container hidden" id="manual-method-content">
@@ -77,68 +67,99 @@
               </button>
             </div>
           </div>
-          <div class="control-group hidden" id="scroll-controls">
-            <h3>Teleprompter Controls</h3>
-            <div class="scroll-speed-container">
-              <label for="scroll-speed">Scroll Speed:</label>
-              <input
-                type="range"
-                id="scroll-speed"
-                min="1"
-                max="10"
-                value="3"
-              />
-              <span class="speed-value">3</span>
-            </div>
-            <div class="scroll-buttons">
-              <button id="start-scroll">Start Scrolling</button>
-              <button id="stop-scroll" class="hidden">Stop Scrolling</button>
-              <button id="reset-scroll">Reset</button>
-              <button id="toggle-fullscreen">Fullscreen</button>
-              <button id="back-to-extraction">Back to Extraction</button>
-            </div>
-            <div class="keyboard-shortcuts">
-              <h4>Keyboard Shortcuts:</h4>
-              <ul>
-                <li><kbd>Space</kbd> - Start/Stop scrolling</li>
-                <li><kbd>↑</kbd><kbd>↓</kbd> - Manual scroll</li>
-                <li><kbd>Home</kbd> - Reset to top</li>
-                <li><kbd>F</kbd> - Toggle fullscreen</li>
-                <li><kbd>1</kbd>-<kbd>9</kbd> - Adjust speed</li>
-              </ul>
+        </div>
+
+        <!-- Saved songs dropdown -->
+        <div class="dropdown" id="songs-dropdown">
+          <button class="dropdown-button" id="saved-songs-button">
+            <i class="fas fa-list"></i> Saved Songs
+            <i class="fas fa-caret-down"></i>
+          </button>
+          <div class="dropdown-content hidden">
+            <div id="saved-songs-container">
+              <!-- This will be populated by JavaScript -->
             </div>
           </div>
-          <div id="loading-indicator" class="hidden">Loading song...</div>
-          <div id="error-load" class="hidden">
-            Error loading song. Please check the URL.
+        </div>
+
+        <!-- Teleprompter controls section -->
+        <div class="teleprompter-controls">
+          <div class="scroll-speed-container">
+            <label for="scroll-speed">Speed:</label>
+            <input type="range" id="scroll-speed" min="1" max="10" value="3" />
+            <span class="speed-value">3</span>
           </div>
+
+          <div class="scroll-buttons">
+            <button id="start-scroll" title="Start Scrolling">
+              <i class="fas fa-play"></i>
+            </button>
+            <button id="stop-scroll" class="hidden" title="Stop Scrolling">
+              <i class="fas fa-pause"></i>
+            </button>
+            <button id="reset-scroll" title="Reset Scroll">
+              <i class="fas fa-arrow-up"></i>
+            </button>
+            <button id="toggle-fullscreen" title="Fullscreen">
+              <i class="fas fa-expand"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Keyboard shortcuts popup -->
+        <div class="shortcuts-section">
+          <button id="show-shortcuts" title="Keyboard Shortcuts">
+            <i class="fas fa-keyboard"></i>
+          </button>
+          <div id="shortcuts-popup" class="hidden">
+            <h3>Keyboard Shortcuts</h3>
+            <ul>
+              <li><kbd>Space</kbd> - Start/Stop scrolling</li>
+              <li><kbd>↑</kbd><kbd>↓</kbd> - Manual scroll</li>
+              <li><kbd>Home</kbd> - Reset to top</li>
+              <li><kbd>F</kbd> - Toggle fullscreen</li>
+              <li><kbd>1</kbd>-<kbd>9</kbd> - Adjust speed</li>
+              <li><kbd>←</kbd><kbd>→</kbd> - Previous/Next song</li>
+              <li><kbd>E</kbd> - Extract song menu</li>
+              <li><kbd>S</kbd> - Saved songs menu</li>
+              <li><kbd>K</kbd> - Show shortcuts</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Song navigation controls -->
+        <div class="song-navigation">
+          <button id="prev-song" title="Previous Song">
+            <i class="fas fa-step-backward"></i>
+          </button>
+          <button id="next-song" title="Next Song">
+            <i class="fas fa-step-forward"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Mini floating controls for when main controls are collapsed -->
-      <div id="mini-controls">
-        <div class="mini-scroll-speed-container">
-          <input
-            type="range"
-            id="mini-scroll-speed"
-            min="1"
-            max="10"
-            value="3"
-          />
-          <span class="mini-speed-value">3</span>
-        </div>
-        <button id="mini-start-scroll">Start</button>
-        <button id="mini-stop-scroll" class="hidden">Stop</button>
-        <button id="mini-reset-scroll">Reset</button>
-        <button id="mini-toggle-fullscreen">Full</button>
-        <button id="mini-back-to-extraction">Back</button>
+      <div id="loading-indicator" class="hidden">Loading song...</div>
+      <div id="error-load" class="hidden">
+        Error loading song. Please try again.
       </div>
 
       <div id="teleprompter">
-        <div id="song-content"></div>
+        <div id="song-content">
+          <!-- Welcome message -->
+          <div class="welcome-message">
+            <h2>Welcome to Smoothieficator</h2>
+            <p>To get started, click "Extract Song" and either:</p>
+            <ul>
+              <li>
+                Copy-paste content from Ultimate Guitar (Print View recommended)
+              </li>
+              <li>Manually enter song title, artist, and lyrics with chords</li>
+            </ul>
+            <p>Use keyboard shortcuts (<kbd>K</kbd>) for quick navigation</p>
+          </div>
+        </div>
       </div>
     </div>
-    <script src="js/auth.js"></script>
     <script src="js/scraper.js"></script>
     <script src="js/teleprompter.js"></script>
     <script src="js/extractor.js"></script>
