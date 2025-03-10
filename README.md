@@ -56,7 +56,3 @@ This app uses your browser's local storage to save songs. Your song data stays o
 ## About
 
 Created for and by musicians who need a simple, effective teleprompter for performances.
-
----
-
-&copy; Smoothieficator

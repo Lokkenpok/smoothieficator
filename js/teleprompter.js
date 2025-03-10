@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function startScrolling() {
     if (isScrolling) return;
 
-    const speed = calculateScrollSpeed();
+    const speedSettings = calculateScrollSpeed();
     isScrolling = true;
 
     // Show stop button, hide start button
@@ -65,7 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Start scrolling at the calculated speed
     scrollInterval = setInterval(() => {
-      teleprompter.scrollBy(0, speed);
+      // Always scroll at least 1 pixel, which is the minimum visible movement
+      teleprompter.scrollBy(0, speedSettings.pixelAmount);
 
       // If we've reached the end, stop scrolling
       if (
@@ -74,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ) {
         stopScrolling();
       }
-    }, 50); // Update every 50ms for smooth scrolling
+    }, speedSettings.interval); // Dynamic interval based on speed
   }
 
   function stopScrolling() {
@@ -97,11 +98,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function calculateScrollSpeed() {
-    // Get current scroll speed value (1-10)
+    // Get current scroll speed value (1-15)
     const speedValue = parseInt(scrollSpeedInput.value);
 
-    // Calculate actual pixels per interval (exponential scale for more control at slower speeds)
-    return baseScrollSpeed * Math.pow(1.3, speedValue - 1);
+    // For slow speeds (1-3), use longer intervals with fixed 1px movement
+    if (speedValue <= 3) {
+      // Map speed 1-3 to intervals between 180ms (very slow) and 100ms
+      const interval = 180 - (speedValue - 1) * 40;
+      return {
+        pixelAmount: 1,
+        interval: interval,
+      };
+    }
+    // For speeds 4+, use fixed 50ms interval with increasing pixel amounts
+    else {
+      // Map speed 4-15 to pixel amounts between 1.2 and 5 pixels
+      const pixelAmount = 1.2 + (speedValue - 4) * 0.32;
+      return {
+        pixelAmount: pixelAmount,
+        interval: 50,
+      };
+    }
   }
 
   function toggleFullscreen() {
