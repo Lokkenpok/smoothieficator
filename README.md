@@ -1,17 +1,25 @@
 # Smoothieficator
 
-A free and open lyrics and chords teleprompter web application. This tool allows musicians to load songs from Ultimate Guitar, enter songs manually, and display them in a teleprompter-style view for live performances.
+A free and open lyrics and chords teleprompter web application. This tool allows musicians to load songs from chord/lyric sources, enter songs manually, and display them in a teleprompter-style view for live performances.
+
+## Requirements
+
+- Any modern web browser (Chrome, Firefox, Edge, Safari, etc.)
+- No installation or backend required
 
 ## Features
 
 - **Streamlined Interface**: Clean, compact design with a unified top bar for all controls
 - **Multiple Song Import Methods**:
-  - Copy-paste from Ultimate Guitar (recommended for best formatting)
+  - Copy-paste from any chord/lyric site or document
   - Manual song entry
 - **Song Management**:
   - Automatically saves all imported songs locally
   - Easy browsing through your saved song library
   - Delete unwanted songs with a single click
+- **Import/Export**:
+  - Export all your saved songs as a JSON file for backup or transfer
+  - Import a previously exported JSON file to restore your songs
 - **Auto-scrolling Teleprompter**:
   - Adjustable speeds
   - Precise chord positioning and formatting
@@ -24,7 +32,7 @@ A free and open lyrics and chords teleprompter web application. This tool allows
 ## How to Use
 
 1. Extract songs using one of the following methods:
-   - **Copy-Paste**: Use the Ultimate Guitar Print View for best results
+   - **Copy-Paste**: Use a print-friendly view or plain text from any chord/lyric source for best results
    - **Manual Entry**: Enter song title, artist, and paste or type lyrics with chords
 2. Adjust scroll speed using the slider in the top bar
 3. Use playback controls to start/stop scrolling or reset to the top
@@ -53,6 +61,10 @@ A free and open lyrics and chords teleprompter web application. This tool allows
 ## Privacy Note
 
 This app uses your browser's local storage to save songs. Your song data stays on your device and is not shared with any servers.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## About
 

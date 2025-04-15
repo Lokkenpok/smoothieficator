@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
       pasteArea.style.outline = "none";
       pasteArea.style.boxSizing = "border-box";
       pasteArea.placeholder =
-        "Paste the copied content from Ultimate Guitar Print View here (https://tabs.ultimate-guitar.com/tab/print?...), then press Ctrl+Enter or click the Confirm button below";
+        "Paste the copied content from a chord/lyric site or document here (print-friendly view recommended), then press Ctrl+Enter or click the Confirm button below";
       pasteContainer.appendChild(pasteArea);
 
       // Create a button container
@@ -703,12 +703,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     infoOverlay.innerHTML = `
       <h3 style="margin-top:0;color:#ffc107">Cleaning Tips</h3>
-      <p>For best results, use the Ultimate Guitar Print View:</p>
+      <p>For best results, use a print-friendly view or plain text from your chord/lyric source:</p>
       <ol style="padding-left:20px;margin:10px 0">
-        <li>Go to the Ultimate Guitar song page</li>
-        <li>Click the "Print" button at the top</li>
-        <li>In the print page, press Ctrl+A to select all content</li>
-        <li>Press Ctrl+C to copy</li>
+        <li>Go to your preferred chord/lyric site or document</li>
+        <li>Use a print or simplified view if available</li>
+        <li>Select all content (Ctrl+A) and copy (Ctrl+C)</li>
       </ol>
       <p>This will preserve chord positions above lyrics for better readability.</p>
       <button id="close-info" style="background:#ffc107;border:none;padding:5px 10px;color:#1a1a1a;cursor:pointer;border-radius:3px;margin-top:5px">OK, Got it</button>
