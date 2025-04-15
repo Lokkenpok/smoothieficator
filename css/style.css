@@ -385,8 +385,8 @@ button:hover {
 }
 
 #song-content {
-  font-size: 1.5rem; /* Increased font size for better readability */
-  max-width: 1000px;
+  font-size: 1.8rem; /* Increased from 1.5rem for bigger text */
+  max-width: 90%; /* Increased from 1000px to use more screen width */
   margin: 0 auto;
   padding-bottom: 70vh; /* Extra padding at the bottom for scrolling */
 }
@@ -395,6 +395,7 @@ button:hover {
 .chord {
   color: #ffc107;
   font-weight: bold;
+  font-size: 1.9rem; /* Slightly larger than regular text */
 }
 
 .verse,
@@ -1090,4 +1091,46 @@ kbd {
   border-radius: 3px;
   font-family: monospace;
   font-size: 0.9em;
+}
+
+/* Import/Export Styling */
+.success-status {
+  background-color: rgba(40, 167, 69, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.error-status {
+  background-color: rgba(220, 53, 69, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+#import-export-container {
+  padding: 10px;
+}
+
+#import-export-container .button-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Update keyboard shortcuts to include Import/Export */
+#shortcuts-popup ul li kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: #fff;
+  background-color: #444;
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  margin: 0 2px;
 }

@@ -82,11 +82,48 @@
           </div>
         </div>
 
+        <!-- Import/Export dropdown -->
+        <div class="dropdown" id="import-export-dropdown">
+          <button class="dropdown-button" id="import-export-button">
+            <i class="fas fa-file-export"></i> Import/Export
+            <i class="fas fa-caret-down"></i>
+          </button>
+          <div class="dropdown-content hidden">
+            <div id="import-export-container">
+              <div class="button-row">
+                <button
+                  id="export-songs-button"
+                  class="primary-button compact-button"
+                >
+                  <i class="fas fa-download"></i> Export Songs
+                </button>
+                <button
+                  id="import-songs-button"
+                  class="primary-button compact-button"
+                >
+                  <i class="fas fa-upload"></i> Import Songs
+                </button>
+              </div>
+              <input
+                type="file"
+                id="import-file-input"
+                accept=".json"
+                style="display: none"
+              />
+              <div
+                id="import-status"
+                class="hidden"
+                style="margin-top: 10px; font-size: 0.9rem"
+              ></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Teleprompter controls section -->
         <div class="teleprompter-controls">
           <div class="scroll-speed-container">
             <label for="scroll-speed">Speed:</label>
-            <input type="range" id="scroll-speed" min="1" max="15" value="8" />
+            <input type="range" id="scroll-speed" min="1" max="25" value="8" />
             <span class="speed-value">8</span>
           </div>
 
@@ -118,7 +155,10 @@
               <li><kbd>↑</kbd><kbd>↓</kbd> - Manual scroll</li>
               <li><kbd>Home</kbd> - Reset to top</li>
               <li><kbd>F</kbd> - Toggle fullscreen</li>
-              <li><kbd>1</kbd>-<kbd>9</kbd> - Adjust speed</li>
+              <li>
+                <kbd>1</kbd>-<kbd>9</kbd> - Quick speed settings (use slider for
+                10-25)
+              </li>
               <li><kbd>←</kbd><kbd>→</kbd> - Previous/Next song</li>
               <li><kbd>E</kbd> - Extract song menu</li>
               <li><kbd>S</kbd> - Saved songs menu</li>

@@ -482,6 +482,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const lines = text.split(/\r?\n/);
     const processedLines = [];
     let inTabBlock = false;
+    let hasChordLine = false; // Flag to detect if there are any chord lines in the whole text
+
+    // First pass - check if the text has any chord lines at all
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line.length > 0 && isChordOnlyLine(line)) {
+        hasChordLine = true;
+        break;
+      }
+    }
 
     // Process each line
     for (let i = 0; i < lines.length; i++) {
@@ -518,10 +528,9 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      // Check for chord lines
-      // In the print view, chord lines are typically alone on their own line
-      // above the corresponding lyric line
+      // Only process chord lines if we've detected some chords in the text
       if (
+        hasChordLine &&
         preservePosition &&
         isChordOnlyLine(trimmedLine) &&
         i + 1 < lines.length &&
@@ -531,6 +540,12 @@ document.addEventListener("DOMContentLoaded", function () {
         // We need to preserve the spaces between chords
         const chordLine = convertSpacedChordLine(line);
         processedLines.push(chordLine);
+        continue;
+      }
+
+      // Skip chord processing for lyrics-only content
+      if (!hasChordLine) {
+        processedLines.push(line);
         continue;
       }
 
@@ -581,18 +596,33 @@ document.addEventListener("DOMContentLoaded", function () {
       const chord = match[0];
       const pos = match.index;
 
-      // Calculate the position considering the added tags and previous modifications
-      const taggedChord = `[ch]${chord}[/ch]`;
-      const posDiff = taggedChord.length - chord.length;
+      // Make sure we're not matching lyrics that happen to start with chord names
+      // Check if the chord is preceded by a space or is at the start of the line
+      const isStartOfLine = pos === 0;
+      const isPrecededBySpace = pos > 0 && line[pos - 1] === " ";
 
-      // Replace at exact position (accounting for all previous replacements)
-      result =
-        result.substring(0, pos + offset) +
-        taggedChord +
-        result.substring(pos + offset + chord.length);
+      // Check if the chord is followed by a space or is at the end of the line
+      const isEndOfLine = pos + chord.length === line.length;
+      const isFollowedBySpace =
+        !isEndOfLine && line[pos + chord.length] === " ";
 
-      // Keep track of total offset from all replacements
-      offset += posDiff;
+      // Only tag as chord if it's properly separated by spaces or at line boundaries
+      if (isStartOfLine || isPrecededBySpace) {
+        if (isEndOfLine || isFollowedBySpace) {
+          // Calculate the position considering the added tags and previous modifications
+          const taggedChord = `[ch]${chord}[/ch]`;
+          const posDiff = taggedChord.length - chord.length;
+
+          // Replace at exact position (accounting for all previous replacements)
+          result =
+            result.substring(0, pos + offset) +
+            taggedChord +
+            result.substring(pos + offset + chord.length);
+
+          // Keep track of total offset from all replacements
+          offset += posDiff;
+        }
+      }
     }
 
     return result;

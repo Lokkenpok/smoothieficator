@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Scroll state
   let isScrolling = false;
   let scrollInterval = null;
+  let scrollAccumulator = 0; // Accumulator for fractional scrolling
   const baseScrollSpeed = 1; // Base pixels per interval
 
   // Song navigation state
@@ -56,8 +57,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function startScrolling() {
     if (isScrolling) return;
 
-    const speedSettings = calculateScrollSpeed();
+    const speed = calculateScrollSpeed();
     isScrolling = true;
+    scrollAccumulator = 0; // Reset accumulator when starting
 
     // Show stop button, hide start button
     startScrollBtn.classList.add("hidden");
@@ -65,8 +67,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Start scrolling at the calculated speed
     scrollInterval = setInterval(() => {
-      // Always scroll at least 1 pixel, which is the minimum visible movement
-      teleprompter.scrollBy(0, speedSettings.pixelAmount);
+      // Add the fractional speed to the accumulator
+      scrollAccumulator += speed;
+
+      // When the accumulator reaches at least 1, scroll by the integer part
+      if (scrollAccumulator >= 1) {
+        const scrollPixels = Math.floor(scrollAccumulator);
+        teleprompter.scrollBy(0, scrollPixels);
+        scrollAccumulator -= scrollPixels; // Keep the remainder for next time
+      }
 
       // If we've reached the end, stop scrolling
       if (
@@ -75,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ) {
         stopScrolling();
       }
-    }, speedSettings.interval); // Dynamic interval based on speed
+    }, 50); // Update every 50ms for smooth scrolling
   }
 
   function stopScrolling() {
@@ -98,27 +107,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function calculateScrollSpeed() {
-    // Get current scroll speed value (1-15)
+    // Get current scroll speed value (1-25)
     const speedValue = parseInt(scrollSpeedInput.value);
 
-    // For slow speeds (1-3), use longer intervals with fixed 1px movement
-    if (speedValue <= 3) {
-      // Map speed 1-3 to intervals between 180ms (very slow) and 100ms
-      const interval = 180 - (speedValue - 1) * 40;
-      return {
-        pixelAmount: 1,
-        interval: interval,
-      };
-    }
-    // For speeds 4+, use fixed 50ms interval with increasing pixel amounts
-    else {
-      // Map speed 4-15 to pixel amounts between 1.2 and 5 pixels
-      const pixelAmount = 1.2 + (speedValue - 4) * 0.32;
-      return {
-        pixelAmount: pixelAmount,
-        interval: 50,
-      };
-    }
+    // Updated formula to allow for speeds below 1 pixel per interval:
+    // Speed 1: 0.2 pixels per update (very very slow, takes 5 updates to move 1 pixel)
+    // Speed 5: 1.0 pixels per update (1 pixel per update - visible but still slow)
+    // Speed 13: ~2.6 pixels per update (medium)
+    // Speed 25: ~5.0 pixels per update (very fast)
+    return 0.2 + (speedValue - 1) * 0.2;
   }
 
   function toggleFullscreen() {

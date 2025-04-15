@@ -467,4 +467,203 @@ document.addEventListener("DOMContentLoaded", () => {
       savedSongsContainer.appendChild(songsList);
     }
   }
+
+  // Import/Export functionality
+  const importExportBtn = document.getElementById("import-export-button");
+  const importExportDropdownContent = document.querySelector(
+    "#import-export-dropdown .dropdown-content"
+  );
+  const exportSongsBtn = document.getElementById("export-songs-button");
+  const importSongsBtn = document.getElementById("import-songs-button");
+  const importFileInput = document.getElementById("import-file-input");
+  const importStatus = document.getElementById("import-status");
+
+  if (importExportBtn && importExportDropdownContent) {
+    importExportBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      importExportDropdownContent.classList.toggle("hidden");
+
+      // Close other dropdowns
+      const otherDropdowns = [
+        document.querySelector("#songs-dropdown .dropdown-content"),
+        document.querySelector("#extract-dropdown .dropdown-content"),
+      ];
+
+      otherDropdowns.forEach((dropdown) => {
+        if (dropdown && !dropdown.classList.contains("hidden")) {
+          dropdown.classList.add("hidden");
+        }
+      });
+
+      // Close shortcuts popup if open
+      const shortcutsPopup = document.getElementById("shortcuts-popup");
+      if (shortcutsPopup && !shortcutsPopup.classList.contains("hidden")) {
+        shortcutsPopup.classList.add("hidden");
+      }
+    });
+  }
+
+  // Add event listeners to close import/export when other dropdowns are opened
+  const otherDropdownButtons = [
+    document.getElementById("saved-songs-button"),
+    document.querySelector("#extract-dropdown .dropdown-button"),
+  ];
+
+  otherDropdownButtons.forEach((button) => {
+    if (button) {
+      button.addEventListener("click", () => {
+        if (
+          importExportDropdownContent &&
+          !importExportDropdownContent.classList.contains("hidden")
+        ) {
+          importExportDropdownContent.classList.add("hidden");
+        }
+      });
+    }
+  });
+
+  // Export songs functionality
+  if (exportSongsBtn) {
+    exportSongsBtn.addEventListener("click", () => {
+      const savedSongsData = localStorage.getItem("savedSongs");
+
+      if (!savedSongsData || savedSongsData === "{}") {
+        alert("No songs to export. Save some songs first!");
+        return;
+      }
+
+      // Create JSON file blob
+      const blob = new Blob([savedSongsData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      // Create download link
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `smoothieficator-songs-${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      document.body.appendChild(a);
+      a.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+
+      // Hide dropdown after export
+      importExportDropdownContent.classList.add("hidden");
+    });
+  }
+
+  // Import songs functionality
+  if (importSongsBtn && importFileInput) {
+    importSongsBtn.addEventListener("click", () => {
+      importFileInput.click();
+    });
+
+    importFileInput.addEventListener("change", (e) => {
+      if (!e.target.files.length) return;
+
+      const file = e.target.files[0];
+      if (file.type !== "application/json" && !file.name.endsWith(".json")) {
+        showImportStatus("Error: Please select a valid JSON file.", "error");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const importedData = JSON.parse(event.target.result);
+
+          // Validate imported data format
+          if (typeof importedData !== "object") {
+            showImportStatus("Error: Invalid data format.", "error");
+            return;
+          }
+
+          // Get current songs
+          const currentSongs = JSON.parse(
+            localStorage.getItem("savedSongs") || "{}"
+          );
+
+          // Count stats for user feedback
+          let totalImported = 0;
+          let newSongs = 0;
+          let updatedSongs = 0;
+
+          // Process imported songs
+          Object.entries(importedData).forEach(([id, song]) => {
+            // Validate song data
+            if (!song.title || !song.artist || !song.content) {
+              return; // Skip invalid entries
+            }
+
+            totalImported++;
+
+            // Check if song already exists
+            const existingEntry = Object.entries(currentSongs).find(
+              ([_, savedSong]) =>
+                savedSong.title === song.title &&
+                savedSong.artist === song.artist
+            );
+
+            if (existingEntry) {
+              updatedSongs++;
+              // Update existing song if import has more data
+              const [existingId, _] = existingEntry;
+              currentSongs[existingId] = song;
+            } else {
+              newSongs++;
+              // Add as new song with original timestamp if possible
+              currentSongs[id] = song;
+            }
+          });
+
+          // Save merged data back to localStorage
+          localStorage.setItem("savedSongs", JSON.stringify(currentSongs));
+
+          // Update the local songs reference to match localStorage
+          Object.assign(localSongs, currentSongs);
+
+          // Update UI and show status message
+          updateSavedSongsDropdown();
+          showImportStatus(
+            `Import successful: ${totalImported} songs imported (${newSongs} new, ${updatedSongs} updated).`,
+            "success"
+          );
+        } catch (error) {
+          console.error("Import error:", error);
+          showImportStatus(
+            "Error: Could not parse the imported file.",
+            "error"
+          );
+        }
+      };
+
+      reader.onerror = () => {
+        showImportStatus("Error: Could not read the file.", "error");
+      };
+
+      reader.readAsText(file);
+
+      // Reset the input so the same file can be selected again
+      e.target.value = "";
+    });
+  }
+
+  // Helper function to show import status
+  function showImportStatus(message, type) {
+    if (!importStatus) return;
+
+    importStatus.textContent = message;
+    importStatus.className =
+      type === "error" ? "error-status" : "success-status";
+    importStatus.classList.remove("hidden");
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      importStatus.classList.add("hidden");
+    }, 5000);
+  }
 });
