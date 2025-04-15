@@ -328,6 +328,37 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         songItem.appendChild(loadButton);
 
+        // Add Rename button
+        const renameButton = document.createElement("button");
+        renameButton.textContent = "Rename";
+        renameButton.addEventListener("click", () => {
+          const newTitle = prompt("Enter new song title:", song.title);
+          if (newTitle === null) return; // Cancelled
+          const newArtist = prompt("Enter new artist name:", song.artist);
+          if (newArtist === null) return; // Cancelled
+          if (!newTitle.trim() || !newArtist.trim()) {
+            alert("Title and artist cannot be empty.");
+            return;
+          }
+          // Check for duplicate
+          const duplicate = Object.values(localSongs).some(
+            (s, idx) =>
+              s.title === newTitle.trim() &&
+              s.artist === newArtist.trim() &&
+              Object.keys(localSongs)[idx] !== id
+          );
+          if (duplicate) {
+            alert("A song with this title and artist already exists.");
+            return;
+          }
+          song.title = newTitle.trim();
+          song.artist = newArtist.trim();
+          localSongs[id] = song;
+          localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+          showSavedSongs();
+        });
+        songItem.appendChild(renameButton);
+
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
         deleteButton.classList.add("delete-button");
@@ -446,6 +477,38 @@ document.addEventListener("DOMContentLoaded", () => {
           songsDropdownContent.classList.add("hidden");
         });
         songItem.appendChild(loadButton);
+
+        // Add Rename button to dropdown
+        const renameButton = document.createElement("button");
+        renameButton.textContent = "Rename";
+        renameButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const newTitle = prompt("Enter new song title:", song.title);
+          if (newTitle === null) return; // Cancelled
+          const newArtist = prompt("Enter new artist name:", song.artist);
+          if (newArtist === null) return; // Cancelled
+          if (!newTitle.trim() || !newArtist.trim()) {
+            alert("Title and artist cannot be empty.");
+            return;
+          }
+          // Check for duplicate
+          const duplicate = Object.values(localSongs).some(
+            (s, idx) =>
+              s.title === newTitle.trim() &&
+              s.artist === newArtist.trim() &&
+              Object.keys(localSongs)[idx] !== id
+          );
+          if (duplicate) {
+            alert("A song with this title and artist already exists.");
+            return;
+          }
+          song.title = newTitle.trim();
+          song.artist = newArtist.trim();
+          localSongs[id] = song;
+          localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+          updateSavedSongsDropdown();
+        });
+        songItem.appendChild(renameButton);
 
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "X";

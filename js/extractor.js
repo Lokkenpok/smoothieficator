@@ -292,6 +292,30 @@ document.addEventListener("DOMContentLoaded", function () {
       // Clean up title if it has "tabs" or "chords" in it
       title = title.replace(/\s*(tabs|chords|tab|chord)\s*$/i, "").trim();
 
+      // If title or artist is still unknown, make it unique
+      if (title === "Unknown Song" && artist === "Unknown Artist") {
+        // Check localStorage for existing unknowns
+        let baseTitle = title;
+        let baseArtist = artist;
+        let counter = 1;
+        let uniqueTitle = baseTitle;
+        let uniqueArtist = baseArtist;
+        const savedSongs = JSON.parse(
+          localStorage.getItem("savedSongs") || "{}"
+        );
+        const values = Object.values(savedSongs);
+        while (
+          values.some(
+            (song) => song.title === uniqueTitle && song.artist === uniqueArtist
+          )
+        ) {
+          counter++;
+          uniqueTitle = `${baseTitle} ${counter}`;
+          // artist stays the same
+        }
+        title = uniqueTitle;
+      }
+
       // Process the content to identify chords with preserved positioning
       const processedContent = processChords(cleanedContent, true);
 
@@ -549,11 +573,26 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      // Standard chord processing for mixed lines (lyrics with chords)
-      // Enhanced regex to match more complex chord formats
-      const chordsRegex =
-        /\b([A-G][#b]?(?:m|maj|min|dim|sus|aug|add|M)?(?:[\d\/]+)?(?:[^\s]*)?(?:\([^)]*\))?)\b/g;
-      let processedLine = line.replace(chordsRegex, "[ch]$1[/ch]");
+      // For mixed lines, only tag inline chords if they are surrounded by boundaries
+      // Chord pattern: must be at least two characters (e.g. "A" is not tagged unless on chord line)
+      const inlineChordRegex =
+        /\b([A-G][#b]?(?:m|maj|min|dim|sus|aug|add|M)?(?:\d{0,2})?(?:\/[A-G][#b]?)?(?:\([^)]*\))?)\b/g;
+      let processedLine = line.replace(
+        inlineChordRegex,
+        (match, p1, offset, str) => {
+          // If it's a single letter, only tag if surrounded by spaces or at start/end
+          if (match.length === 1) {
+            const before = offset === 0 ? " " : str[offset - 1];
+            const after = offset + 1 >= str.length ? " " : str[offset + 1];
+            if (/\s/.test(before) && /\s/.test(after)) {
+              return `[ch]${match}[/ch]`;
+            } else {
+              return match;
+            }
+          }
+          return `[ch]${match}[/ch]`;
+        }
+      );
 
       // Skip chord definition lines (like "Am = x02210")
       if (processedLine.includes(" = ") && processedLine.match(/\[ch\]/)) {
@@ -570,16 +609,15 @@ document.addEventListener("DOMContentLoaded", function () {
   // Check if a line contains only chord patterns (with possible spacing)
   function isChordOnlyLine(line) {
     if (!line || line.length === 0) return false;
-
-    // Remove all potential chords and spaces
-    // Enhanced pattern to match more complex chord formats
-    const nonChordContent = line.replace(
-      /\s*[A-G][#b]?(?:m|maj|min|dim|sus|aug|add|M)?(?:[\d\/]+)?(?:[^\s]*)?(?:\([^)]*\))?\s*/g,
-      ""
-    );
-
-    // If nothing remains, it was a chord-only line
-    return nonChordContent.length === 0;
+    // Split line into tokens (words)
+    const tokens = line.trim().split(/\s+/);
+    // Require at least 2 tokens to be a chord line (prevents single lyric words like "A")
+    if (tokens.length < 2) return false;
+    // Allow single-letter chords in chord-only lines
+    const chordPattern =
+      /^[A-G][#b]?(m|maj|min|dim|sus|aug|add|M)?(\d{0,2})?(\/[A-G][#b]?)?(\([^)]*\))?$/;
+    // All tokens must match chord pattern
+    return tokens.every((token) => chordPattern.test(token));
   }
 
   // Convert a line with spaced chords to preserve positions
