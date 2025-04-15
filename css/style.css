@@ -17,50 +17,6 @@ body {
   display: none !important;
 }
 
-/* Login Screen */
-#login-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: #1a1a1a;
-}
-
-.login-box {
-  background-color: #2a2a2a;
-  border-radius: 8px;
-  padding: 2rem;
-  width: 350px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  text-align: center;
-}
-
-.login-box h1 {
-  color: #ffc107;
-  margin-bottom: 0.5rem;
-}
-
-.login-box h2 {
-  margin-bottom: 2rem;
-  color: #f8f9fa;
-  font-weight: 300;
-}
-
-#password-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-input[type="password"] {
-  padding: 10px 15px;
-  border-radius: 4px;
-  border: 1px solid #444;
-  background-color: #333;
-  color: #fff;
-  font-size: 1rem;
-}
-
 button {
   padding: 10px;
   background-color: #ffc107;
@@ -811,6 +767,7 @@ kbd {
 #mini-controls.visible {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 #mini-controls button {
@@ -1118,7 +1075,7 @@ kbd {
 
 #import-export-container .button-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: 10px;
 }
 

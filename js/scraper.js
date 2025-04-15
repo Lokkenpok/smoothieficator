@@ -3,9 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const songContent = document.getElementById("song-content");
   const loadingIndicator = document.getElementById("loading-indicator");
   const errorLoad = document.getElementById("error-load");
-  const scrollControls = document.getElementById("scroll-controls");
   const teleprompter = document.getElementById("teleprompter");
-  const controls = document.getElementById("controls");
 
   // Initialize local storage for saved songs
   const localSongs = JSON.parse(localStorage.getItem("savedSongs") || "{}");
@@ -14,10 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("songExtracted", (event) => {
     if (event.detail) {
       displaySong(event.detail);
-      scrollControls.classList.remove("hidden");
 
       // Collapse controls to maximize teleprompter space
-      if (!controls.classList.contains("collapsed")) {
+      const controls = document.getElementById("controls");
+      if (controls && !controls.classList.contains("collapsed")) {
         document.getElementById("toggle-controls").click();
       }
     }
@@ -26,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function showError(message) {
     errorLoad.textContent = message;
     errorLoad.classList.remove("hidden");
-    scrollControls.classList.add("hidden");
   }
 
   function displaySong(song) {
@@ -194,79 +191,22 @@ document.addEventListener("DOMContentLoaded", () => {
     // Display the song
     displaySong(songData);
 
-    // Show scroll controls if they exist
-    if (scrollControls) {
-      scrollControls.classList.remove("hidden");
-    }
-
     return true;
   };
-
-  // Add a button to manage saved songs
-  const controlsDiv = document.querySelector(".controls-content");
-  if (controlsDiv) {
-    // Find the extract container to add the button there
-    const extractContainer = document.querySelector(".extract-tool-container");
-
-    if (extractContainer) {
-      // Create a button row div to hold both buttons
-      const buttonRow = document.createElement("div");
-      buttonRow.classList.add("button-row");
-
-      // Move the extract button into the button row (if it exists)
-      const existingExtractBtn =
-        extractContainer.querySelector("#extract-button");
-      if (existingExtractBtn) {
-        buttonRow.appendChild(existingExtractBtn.cloneNode(true));
-        existingExtractBtn.remove();
-      }
-
-      // Add the manage songs button
-      const manageSongsButton = document.createElement("button");
-      manageSongsButton.textContent = "Manage Saved Songs";
-      manageSongsButton.classList.add("primary-button", "compact-button");
-      manageSongsButton.addEventListener("click", showSavedSongs);
-      buttonRow.appendChild(manageSongsButton);
-
-      // Add the button row after the tabs
-      const tabsContainer = extractContainer.querySelector(".tabs");
-      if (tabsContainer && tabsContainer.nextElementSibling) {
-        tabsContainer.nextElementSibling.after(buttonRow);
-      } else {
-        extractContainer.appendChild(buttonRow);
-      }
-    } else {
-      // Fallback to original approach if extract container not found
-      const manageSongsButton = document.createElement("button");
-      manageSongsButton.textContent = "Manage Saved Songs";
-      manageSongsButton.classList.add("manage-songs-button");
-      manageSongsButton.addEventListener("click", showSavedSongs);
-      controlsDiv.appendChild(manageSongsButton);
-    }
-  }
 
   // Function to display and manage saved songs
   function showSavedSongs() {
     // Clear song content
     songContent.innerHTML = "";
 
-    // Hide extraction tool and show scroll controls
-    const extractionTool = document.querySelector(".extract-tool-container");
-    if (extractionTool) {
-      extractionTool.classList.add("hidden");
-    }
-
-    // Show scroll controls if they exist
-    if (scrollControls) {
-      scrollControls.classList.remove("hidden");
-    }
-
     // Create saved songs UI
     const savedSongsDiv = document.createElement("div");
     savedSongsDiv.classList.add("saved-songs");
 
     // Check if controls are collapsed and add appropriate class
-    const isControlsCollapsed = controls.classList.contains("collapsed");
+    const controls = document.getElementById("controls");
+    const isControlsCollapsed =
+      controls && controls.classList.contains("collapsed");
     if (isControlsCollapsed) {
       savedSongsDiv.classList.add("with-collapsed-controls");
     } else {
@@ -283,16 +223,6 @@ document.addEventListener("DOMContentLoaded", () => {
     backButton.addEventListener("click", function () {
       // Hide the saved songs view
       songContent.innerHTML = "";
-
-      // Show extraction tool again
-      if (extractionTool) {
-        extractionTool.classList.remove("hidden");
-      }
-
-      // Hide scroll controls until a song is loaded
-      if (scrollControls) {
-        scrollControls.classList.add("hidden");
-      }
     });
 
     topControls.appendChild(backButton);
@@ -317,14 +247,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const songItem = document.createElement("li");
 
         const songTitle = document.createElement("span");
-        songTitle.textContent = `${song.title} - ${song.artist}`;
+        const limitedTitle = limitLength(song.title, 60);
+        const limitedArtist = limitLength(song.artist, 60);
+        songTitle.textContent = `${limitedTitle} - ${limitedArtist}`;
+        songTitle.title = `${song.title} - ${song.artist}`; // Add tooltip for full names
         songItem.appendChild(songTitle);
 
         const loadButton = document.createElement("button");
         loadButton.textContent = "Load";
         loadButton.addEventListener("click", () => {
           displaySong(song);
-          scrollControls.classList.remove("hidden");
         });
         songItem.appendChild(loadButton);
 
@@ -433,6 +365,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Helper function to limit string length
+  function limitLength(str, maxLength) {
+    if (str.length <= maxLength) return str;
+    return str.substring(0, maxLength - 3) + "...";
+  }
+
   // Update the saved songs dropdown content
   function updateSavedSongsDropdown() {
     if (!savedSongsContainer) return;
@@ -466,8 +404,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const songItem = document.createElement("li");
 
         const songTitle = document.createElement("span");
-        songTitle.textContent = `${song.title} - ${song.artist}`;
-        songTitle.title = `${song.title} - ${song.artist}`; // Add tooltip for long titles
+        const limitedTitle = limitLength(song.title, 20);
+        const limitedArtist = limitLength(song.artist, 20);
+        songTitle.textContent = `${limitedTitle} - ${limitedArtist}`;
+        songTitle.title = `${song.title} - ${song.artist}`; // Add tooltip for full names
         songItem.appendChild(songTitle);
 
         const loadButton = document.createElement("button");
