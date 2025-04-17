@@ -78,10 +78,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // If we've reached the end, stop scrolling
-      if (
+      // Check if the last content element is at the bottom of the viewport
+      const lastElement = songContent.lastElementChild;
+      if (lastElement) {
+        const lastElementBottom = lastElement.getBoundingClientRect().bottom;
+        const teleprompterBottom = teleprompter.getBoundingClientRect().bottom;
+
+        // Stop when the bottom of the last element is at or near the bottom of the teleprompter
+        // Reduced buffer back to 10 pixels to prevent cutting off too early
+        if (lastElementBottom <= teleprompterBottom + 5) {
+          stopScrolling();
+        }
+      } else if (
         teleprompter.scrollTop + teleprompter.clientHeight >=
         teleprompter.scrollHeight - 10
       ) {
+        // Fallback to the original check if there's no last element
         stopScrolling();
       }
     }, 50); // Update every 50ms for smooth scrolling
