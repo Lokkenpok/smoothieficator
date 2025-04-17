@@ -26,7 +26,7 @@
         <!-- Song extraction dropdown -->
         <div class="dropdown" id="extract-dropdown">
           <button class="dropdown-button">
-            <i class="fas fa-music"></i> Extract Song
+            <i class="fas fa-music"></i> Add Song
             <i class="fas fa-caret-down"></i>
           </button>
           <div class="dropdown-content hidden">
@@ -41,7 +41,7 @@
 
             <div id="copy-paste-content">
               <button id="extract-button" class="primary-button compact-button">
-                Extract Song from Clipboard
+                Add Song from Clipboard
               </button>
             </div>
 
@@ -160,13 +160,20 @@
               <li><kbd>↑</kbd><kbd>↓</kbd> - Manual scroll</li>
               <li><kbd>Home</kbd> - Reset to top</li>
               <li><kbd>F</kbd> - Toggle fullscreen</li>
+              <li><kbd>E</kbd> - Toggle edit mode</li>
+              <li><kbd>Esc</kbd> - Cancel edits (when in edit mode)</li>
+              <li>
+                <kbd>Ctrl</kbd>+<kbd>Enter</kbd> - Save changes (when in edit
+                mode)
+              </li>
               <li>
                 <kbd>1</kbd>-<kbd>9</kbd> - Quick speed settings (use slider for
                 10-25)
               </li>
               <li><kbd>←</kbd><kbd>→</kbd> - Previous/Next song</li>
-              <li><kbd>E</kbd> - Extract song menu</li>
+              <li><kbd>A</kbd> - Add song menu</li>
               <li><kbd>S</kbd> - Saved songs menu</li>
+              <li><kbd>I</kbd> - Import/Export menu</li>
               <li><kbd>K</kbd> - Show shortcuts</li>
             </ul>
           </div>
@@ -193,7 +200,7 @@
           <!-- Welcome message -->
           <div class="welcome-message">
             <h2>Welcome to Smoothieficator</h2>
-            <p>To get started, click "Extract Song" and either:</p>
+            <p>To get started, click "Add Song" and either:</p>
             <ul>
               <li>
                 Copy-paste content from any chord/lyric site or document

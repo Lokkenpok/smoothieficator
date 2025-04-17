@@ -8,6 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize local storage for saved songs
   const localSongs = JSON.parse(localStorage.getItem("savedSongs") || "{}");
 
+  // Make a function to update the localSongs cache from teleprompter.js edit mode
+  window.updateLocalSongsCache = function (updatedSongs) {
+    // Update the in-memory cache to match localStorage
+    Object.assign(localSongs, updatedSongs);
+    console.log("Local songs cache updated after editing");
+  };
+
   // Listen for the manual extraction event
   document.addEventListener("songExtracted", (event) => {
     if (event.detail) {
@@ -39,6 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Process the song content
     let content = song.content;
 
+    // First, normalize any newlines to ensure consistent line breaks
+    content = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
     // Replace [ch] tags with spans for chord styling, but preserve their original spacing
     content = content.replace(
       /\[ch\](.*?)\[\/ch\]/g,
@@ -46,23 +56,19 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     // Identify and mark up sections like Verse, Chorus, etc.
-    const sections = [
-      { name: "Verse", regex: /\[Verse[^\]]*\]/g },
-      { name: "Chorus", regex: /\[Chorus[^\]]*\]/g },
-      { name: "Bridge", regex: /\[Bridge[^\]]*\]/g },
-      { name: "Intro", regex: /\[Intro[^\]]*\]/g },
-      { name: "Outro", regex: /\[Outro[^\]]*\]/g },
-      { name: "Pre-Chorus", regex: /\[Pre-Chorus[^\]]*\]/g },
-      { name: "Interlude", regex: /\[Interlude[^\]]*\]/g },
-      { name: "Solo", regex: /\[Solo[^\]]*\]/g },
-    ];
+    // Make sure any existing HTML section headers are removed first
+    content = content.replace(/<div class="section-title">[^<]+<\/div>/g, "");
 
-    for (const section of sections) {
-      content = content.replace(
-        section.regex,
-        `<div class="section-title">${section.name}</div>`
-      );
-    }
+    // Then convert all section markers from text format to HTML
+    const sectionRegex =
+      /\[(Verse|Chorus|Bridge|Intro|Outro|Pre-Chorus|Interlude|Solo)(?:\s*\d+|\s+[^\]]*)*\]/g;
+    content = content.replace(sectionRegex, (match) => {
+      // Extract the base section type (Verse, Chorus, etc.)
+      const sectionType = match.match(
+        /\[(Verse|Chorus|Bridge|Intro|Outro|Pre-Chorus|Interlude|Solo)/
+      )[1];
+      return `<div class="section-title">${sectionType}</div>`;
+    });
 
     // Split content into lines to process for chord/lyric pairs
     const lines = content.split("\n");

@@ -21,6 +21,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let savedSongs = [];
   let currentSongIndex = -1;
 
+  // Edit mode state
+  let isEditMode = false;
+  let editArea = null;
+
   // Flag to indicate navigation in progress (to prevent duplicate saves)
   window.navigationInProgress = false;
 
@@ -55,7 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function startScrolling() {
-    if (isScrolling) return;
+    // Don't allow scrolling in edit mode
+    if (isEditMode || isScrolling) return;
 
     const speed = calculateScrollSpeed();
     isScrolling = true;
@@ -85,7 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const teleprompterBottom = teleprompter.getBoundingClientRect().bottom;
 
         // Stop when the bottom of the last element is at or near the bottom of the teleprompter
-        // Reduced buffer back to 10 pixels to prevent cutting off too early
         if (lastElementBottom <= teleprompterBottom + 5) {
           stopScrolling();
         }
@@ -156,6 +160,300 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Enable edit mode for the song content
+  function enableEditMode() {
+    // Only enable edit mode if we have a song displayed
+    const songHeader = document.querySelector(".song-header");
+    if (!songHeader || isEditMode) return;
+
+    isEditMode = true;
+
+    // Stop scrolling if active
+    stopScrolling();
+
+    // Store current content and create edit area
+    const songBody = document.querySelector(".song-body");
+    if (!songBody) return;
+
+    // Get song title and artist for later use in saving
+    const songTitle = document.querySelector(".song-header h2")?.textContent;
+    const songArtist = document
+      .querySelector(".song-header h3")
+      ?.textContent?.replace(/by\s+/i, "")
+      .trim();
+
+    // Create notification that we're in edit mode with save and cancel buttons
+    const editNotice = document.createElement("div");
+    editNotice.classList.add("edit-mode-notice");
+    editNotice.style.cssText = `
+      background-color: #ffc107;
+      color: #1a1a1a;
+      padding: 0;
+      text-align: center;
+      font-weight: bold;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    `;
+
+    // Add edit mode text and buttons
+    const editModeText = document.createElement("span");
+    editModeText.textContent = "Edit Mode";
+    editModeText.style.marginRight = "15px";
+
+    // Add shortcut info
+    const shortcutInfo = document.createElement("small");
+    shortcutInfo.textContent = "(Ctrl+Enter to save)";
+    shortcutInfo.style.cssText = `
+      font-weight: normal;
+      font-size: 12px;
+      opacity: 0.8;
+      margin-left: 5px;
+    `;
+    editModeText.appendChild(shortcutInfo);
+
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.style.display = "flex";
+    buttonsContainer.style.alignItems = "center";
+
+    // Create Accept button
+    const acceptButton = document.createElement("button");
+    acceptButton.textContent = "Accept Changes";
+    acceptButton.style.cssText = `
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin-left: 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      height: 30px;
+    `;
+    acceptButton.onclick = saveEditedSong;
+
+    // Create Cancel button
+    const cancelButton = document.createElement("button");
+    cancelButton.textContent = "Cancel";
+    cancelButton.style.cssText = `
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin-left: 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      height: 30px;
+    `;
+    cancelButton.onclick = () => {
+      if (confirm("Exit edit mode? Any unsaved changes will be lost.")) {
+        exitEditMode();
+        // Redisplay current song
+        const currentTitle =
+          document.querySelector(".song-header h2")?.textContent;
+        const currentArtist = document
+          .querySelector(".song-header h3")
+          ?.textContent?.replace(/by\s+/i, "")
+          .trim();
+        if (currentTitle && currentArtist) {
+          const songs = loadSavedSongs();
+          const currentSong = songs.find(
+            (song) =>
+              song.title === currentTitle && song.artist === currentArtist
+          );
+          if (currentSong) {
+            displaySavedSong(currentSong);
+          }
+        }
+      }
+    };
+
+    // Add buttons to container
+    buttonsContainer.appendChild(acceptButton);
+    buttonsContainer.appendChild(cancelButton);
+
+    // Add text and buttons to notice
+    editNotice.appendChild(editModeText);
+    editNotice.appendChild(buttonsContainer);
+
+    // Add notice to DOM
+    songContent.insertBefore(editNotice, songHeader.nextSibling);
+
+    // Get raw content directly from the song in local storage instead of the DOM when possible
+    let rawContent = "";
+
+    // First try to get content from the current displayed song reference
+    if (window.currentDisplayedSong && window.currentDisplayedSong.content) {
+      rawContent = window.currentDisplayedSong.content;
+    }
+    // If that fails, extract from the DOM
+    else {
+      // Process the song body directly, skipping the title and artist header
+      const lines = songBody.querySelectorAll("div");
+      lines.forEach((line) => {
+        if (line.classList.contains("section-title")) {
+          const sectionText = line.textContent.trim();
+          rawContent += `[${sectionText}]\n`;
+        } else if (line.classList.contains("chord-line")) {
+          // Convert chord spans back to [ch] tags
+          let lineText = line.innerHTML;
+          lineText = lineText.replace(
+            /<span class="chord">([^<]+)<\/span>/g,
+            "[ch]$1[/ch]"
+          );
+          // Convert HTML entities back to characters
+          const tempDiv = document.createElement("div");
+          tempDiv.innerHTML = lineText;
+          rawContent += tempDiv.textContent + "\n";
+        } else if (line.classList.contains("lyric-line")) {
+          rawContent += line.textContent + "\n";
+        } else if (line.classList.contains("spacer")) {
+          rawContent += "\n";
+        }
+      });
+    }
+
+    // Normalize line endings to prevent issues when editing
+    rawContent = rawContent.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+    // Create the edit textarea with similar styling to the song display
+    editArea = document.createElement("textarea");
+    editArea.value = rawContent;
+    editArea.style.cssText = `
+      width: 100%;
+      height: calc(100vh - 200px);
+      background-color: #1a1a1a;
+      color: #fff;
+      border: 1px solid #333;
+      padding: 20px;
+      font-family: monospace;
+      font-size: 16px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      box-sizing: border-box;
+    `;
+
+    // Replace the song body with the edit area
+    songBody.replaceWith(editArea);
+
+    // Focus the edit area, place cursor at the beginning, and scroll to top
+    editArea.focus();
+    editArea.setSelectionRange(0, 0);
+
+    // Ensure the textarea is scrolled to the top
+    editArea.scrollTop = 0;
+
+    // Also ensure the teleprompter container is scrolled to the top
+    teleprompter.scrollTop = 0;
+  }
+
+  // Save edited content and exit edit mode
+  function saveEditedSong() {
+    if (!isEditMode || !editArea) return;
+
+    try {
+      // Get song title and artist
+      const songTitle = document.querySelector(".song-header h2")?.textContent;
+      const songArtist = document
+        .querySelector(".song-header h3")
+        ?.textContent?.replace(/by\s+/i, "")
+        .trim();
+
+      if (!songTitle || !songArtist) {
+        throw new Error("Could not find song title or artist");
+      }
+
+      // Get edited content from textarea
+      const editedContent = editArea.value;
+
+      // Find the song in local storage
+      const savedSongs = JSON.parse(localStorage.getItem("savedSongs") || "{}");
+      const entries = Object.entries(savedSongs);
+      const match = entries.find(
+        ([id, song]) => song.title === songTitle && song.artist === songArtist
+      );
+
+      if (match) {
+        const [id, song] = match;
+        // Update the song's content - use the edited content directly
+        song.content = editedContent;
+        savedSongs[id] = song;
+
+        // Save to localStorage
+        localStorage.setItem("savedSongs", JSON.stringify(savedSongs));
+
+        // Update the shared reference in scraper.js if possible
+        if (typeof window.updateLocalSongsCache === "function") {
+          window.updateLocalSongsCache(savedSongs);
+        }
+
+        // Update the current displayed song reference
+        if (window.currentDisplayedSong) {
+          window.currentDisplayedSong.content = editedContent;
+        }
+
+        // Redisplay the song with updated content
+        displayEditedSong({
+          title: songTitle,
+          artist: songArtist,
+          content: editedContent,
+        });
+
+        console.log("Song successfully saved with edited content");
+      } else {
+        console.error("Could not find song in local storage");
+      }
+    } catch (error) {
+      console.error("Error saving edited song:", error);
+    } finally {
+      // Clean up and exit edit mode
+      exitEditMode();
+    }
+  }
+
+  // Display the edited song
+  function displayEditedSong(songData) {
+    // Remove edit mode notice
+    const editNotice = document.querySelector(".edit-mode-notice");
+    if (editNotice) {
+      editNotice.remove();
+    }
+
+    // Use the existing function to display the song
+    if (typeof window.processSongFromBookmarklet === "function") {
+      window.processSongFromBookmarklet(songData);
+    }
+  }
+
+  // Exit edit mode without saving
+  function exitEditMode() {
+    if (!isEditMode) return;
+
+    isEditMode = false;
+
+    // Remove edit mode notice
+    const editNotice = document.querySelector(".edit-mode-notice");
+    if (editNotice) {
+      editNotice.remove();
+    }
+
+    // Restore song display
+    if (editArea) {
+      // The song will be redisplayed when we exit edit mode
+      editArea = null;
+    }
+  }
+
   // Load saved songs
   function loadSavedSongs() {
     const localStorageSongs = localStorage.getItem("savedSongs");
@@ -192,6 +490,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Navigate to previous song
   function goToPreviousSong() {
+    // Don't allow navigation in edit mode
+    if (isEditMode) return;
+
     console.log("Attempting to go to previous song");
     const songs = loadSavedSongs();
     console.log(`Found ${songs.length} total songs`);
@@ -244,6 +545,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Navigate to next song
   function goToNextSong() {
+    // Don't allow navigation in edit mode
+    if (isEditMode) return;
+
     const songs = loadSavedSongs();
     if (songs.length === 0) return; // No songs saved
 
@@ -297,6 +601,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Display saved song (separate from the scraper.js function to avoid circular dependencies)
   function displaySavedSong(songData) {
+    // Exit edit mode if active
+    if (isEditMode) {
+      exitEditMode();
+    }
+
     // Create a clean copy without the timestamp property
     const song = { ...songData };
     delete song.timestamp;
@@ -351,8 +660,23 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleKeyDown(e) {
     // Don't capture key events when typing in input fields
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      // Handle Enter key in edit area to save
+      if (
+        isEditMode &&
+        e.key === "Enter" &&
+        e.ctrlKey &&
+        e.target === editArea
+      ) {
+        e.preventDefault();
+        saveEditedSong();
+      }
       return;
     }
+
+    // Debug keyboard events
+    console.log(
+      `Key pressed: ${e.key}, keyCode: ${e.keyCode}, which: ${e.which}`
+    );
 
     switch (e.key) {
       case " ": // Spacebar
@@ -384,8 +708,69 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleFullscreen();
         break;
 
+      case "E":
+      case "e":
+        e.preventDefault();
+        // Toggle edit mode
+        if (isEditMode) {
+          if (confirm("Exit edit mode? Any unsaved changes will be lost.")) {
+            exitEditMode();
+            // Redisplay current song
+            const currentTitle =
+              document.querySelector(".song-header h2")?.textContent;
+            const currentArtist = document
+              .querySelector(".song-header h3")
+              ?.textContent?.replace(/by\s+/i, "")
+              .trim();
+            if (currentTitle && currentArtist) {
+              const songs = loadSavedSongs();
+              const currentSong = songs.find(
+                (song) =>
+                  song.title === currentTitle && song.artist === currentArtist
+              );
+              if (currentSong) {
+                displaySavedSong(currentSong);
+              }
+            }
+          }
+        } else {
+          enableEditMode();
+        }
+        break;
+
+      case "Enter":
+        // Save edited song if in edit mode
+        if (isEditMode) {
+          e.preventDefault();
+          saveEditedSong();
+        }
+        break;
+
       case "Escape":
-        if (document.fullscreenElement) {
+        if (isEditMode) {
+          // Exit edit mode
+          e.preventDefault();
+          if (confirm("Exit edit mode? Any unsaved changes will be lost.")) {
+            exitEditMode();
+            // Redisplay current song
+            const currentTitle =
+              document.querySelector(".song-header h2")?.textContent;
+            const currentArtist = document
+              .querySelector(".song-header h3")
+              ?.textContent?.replace(/by\s+/i, "")
+              .trim();
+            if (currentTitle && currentArtist) {
+              const songs = loadSavedSongs();
+              const currentSong = songs.find(
+                (song) =>
+                  song.title === currentTitle && song.artist === currentArtist
+              );
+              if (currentSong) {
+                displaySavedSong(currentSong);
+              }
+            }
+          }
+        } else if (document.fullscreenElement) {
           document.exitFullscreen().then(() => {
             appContainer.classList.remove("fullscreen");
           });
@@ -448,10 +833,19 @@ document.addEventListener("DOMContentLoaded", () => {
         goToNextSong();
         break;
 
-      case "E":
-      case "e":
+      case "A":
+      case "a":
         // Toggle extraction dropdown
         e.preventDefault();
+        const extractDropdownBtn = document.querySelector(
+          "#extract-dropdown .dropdown-button"
+        );
+        if (extractDropdownBtn) {
+          extractDropdownBtn.click(); // Trigger the click event handler directly
+          return;
+        }
+
+        // Fallback to the old method if the button isn't found
         const extractDropdownContent = document.querySelector(
           "#extract-dropdown .dropdown-content"
         );
@@ -467,6 +861,17 @@ document.addEventListener("DOMContentLoaded", () => {
           ) {
             savedSongsDropdown.classList.add("hidden");
           }
+
+          // Close import/export dropdown
+          const importExportDropdown = document.querySelector(
+            "#import-export-dropdown .dropdown-content"
+          );
+          if (
+            importExportDropdown &&
+            !importExportDropdown.classList.contains("hidden")
+          ) {
+            importExportDropdown.classList.add("hidden");
+          }
         }
         break;
 
@@ -474,26 +879,21 @@ document.addEventListener("DOMContentLoaded", () => {
       case "s":
         // Toggle saved songs dropdown
         e.preventDefault();
-        const savedSongsDropdown = document.querySelector(
-          "#songs-dropdown .dropdown-content"
-        );
-        if (savedSongsDropdown) {
-          savedSongsDropdown.classList.toggle("hidden");
-          // Update the saved songs list
-          if (!savedSongsDropdown.classList.contains("hidden")) {
-            const event = new Event("click");
-            document.getElementById("saved-songs-button").dispatchEvent(event);
-          }
-          // Close other dropdowns
-          const extractDropdownContent = document.querySelector(
-            "#extract-dropdown .dropdown-content"
-          );
-          if (
-            extractDropdownContent &&
-            !extractDropdownContent.classList.contains("hidden")
-          ) {
-            extractDropdownContent.classList.add("hidden");
-          }
+        // Directly click the saved-songs-button instead of just toggling the dropdown
+        const savedSongsBtn = document.getElementById("saved-songs-button");
+        if (savedSongsBtn) {
+          savedSongsBtn.click(); // This will trigger the click event handler
+        }
+        break;
+
+      case "I":
+      case "i":
+        // Toggle import/export dropdown
+        e.preventDefault();
+        // Directly click the import-export button instead of just toggling the dropdown
+        const importExportBtn = document.getElementById("import-export-button");
+        if (importExportBtn) {
+          importExportBtn.click(); // This will trigger the click event handler
         }
         break;
 
