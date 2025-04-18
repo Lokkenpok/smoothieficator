@@ -287,62 +287,9 @@ button:hover {
   padding-top: 20px;
 }
 
-#controls-content {
-  padding: 1rem;
-  max-height: 40vh;
-  overflow-y: auto;
-}
-
-.input-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 1rem;
-}
-
-.input-group input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #444;
-  background-color: #333;
-  color: #fff;
-}
-
-.control-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  padding: 10px;
-  background: #222;
-  border-radius: 4px;
-  margin-top: 10px;
-}
-
-/* Teleprompter Styles */
-#teleprompter {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-  padding: 2rem;
-  background-color: #121212;
-  margin-top: 50px; /* Space for the collapsed control header */
-  height: calc(100vh - 50px);
-  transition: margin-top 0.3s ease, height 0.3s ease, padding-top 0.3s ease;
-}
-
-#teleprompter.expanded {
-  margin-top: 0;
-  height: 100vh;
-}
-
-#teleprompter.expanded #song-content {
-  padding-top: 20px;
-}
-
 #song-content {
-  font-size: 1.8rem; /* Increased from 1.5rem for bigger text */
-  max-width: 90%; /* Increased from 1000px to use more screen width */
+  font-size: 1.8rem;
+  max-width: 90%;
   margin: 0 auto;
   padding-bottom: 70vh; /* Extra padding at the bottom for scrolling */
 }
@@ -387,6 +334,11 @@ button:hover {
   margin-top: 0;
 }
 
+.fullscreen #top-bar {
+  background-color: rgba(42, 42, 42, 0.8);
+  transition: background-color 0.3s ease;
+}
+
 /* Loading indicator */
 #loading-indicator,
 #error-load {
@@ -403,254 +355,7 @@ button:hover {
   color: #ffc107;
 }
 
-/* Manual instructions styling */
-.manual-instructions {
-  background-color: #2a2a2a;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.manual-instructions h3 {
-  color: #ffc107;
-  margin-bottom: 1rem;
-}
-
-.manual-instructions ol {
-  margin-left: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.manual-instructions li {
-  margin-bottom: 0.5rem;
-}
-
-.code-block {
-  background-color: #1a1a1a;
-  border-radius: 4px;
-  padding: 1rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  font-family: monospace;
-  margin: 1rem 0;
-  border-left: 3px solid #ffc107;
-}
-
-/* Saved songs styling */
-.saved-songs {
-  max-width: 800px;
-  margin: 0 auto;
-  padding-top: 20px; /* Add padding to prevent overlap */
-}
-
-.saved-songs.with-collapsed-controls {
-  padding-top: 50px; /* More space when controls bar is visible but collapsed */
-}
-
-.saved-songs.with-expanded-controls {
-  padding-top: 100px; /* Even more space when controls are fully expanded */
-}
-
-.saved-songs h2 {
-  color: #ffc107;
-  margin-bottom: 1.5rem;
-}
-
-.songs-list {
-  list-style: none;
-  padding: 0;
-}
-
-.songs-list li {
-  display: flex;
-  align-items: center;
-  padding: 0.8rem;
-  border-bottom: 1px solid #333;
-  gap: 1rem;
-}
-
-.songs-list li:last-child {
-  border-bottom: none;
-}
-
-.songs-list li span {
-  flex: 1;
-  font-size: 1.1rem;
-}
-
-.songs-list button {
-  padding: 0.4rem 0.8rem;
-}
-
-.delete-button {
-  background-color: #e0a800;
-}
-
-.delete-button:hover {
-  background-color: #d39e00;
-}
-
-.manage-songs-button {
-  margin-top: 1rem;
-  background-color: #3498db;
-}
-
-.manage-songs-button:hover {
-  background-color: #2980b9;
-}
-
-/* Improved bookmarklet section styling */
-.bookmarklet-container {
-  margin: 15px 0;
-  padding: 20px;
-  background-color: #333;
-  border-radius: 5px;
-  text-align: center;
-  border: 1px solid #555;
-}
-
-.bookmarklet-container h3 {
-  color: #ffc107;
-  margin-bottom: 10px;
-}
-
-.bookmarklet-instructions {
-  text-align: left;
-  background-color: #222;
-  padding: 15px;
-  border-radius: 4px;
-  margin-top: 15px;
-  font-size: 0.9em;
-  color: #ddd;
-}
-
-.bookmarklet-instructions ol {
-  margin-left: 20px;
-}
-
-.bookmarklet-instructions li {
-  margin-bottom: 8px;
-}
-
-.drag-instruction {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 15px 0;
-  background: #222;
-  padding: 15px;
-  border-radius: 4px;
-}
-
-.drag-arrow {
-  display: inline-block;
-  margin-left: 15px;
-  color: #ffc107;
-  font-weight: bold;
-  animation: pulse 1.5s infinite;
-}
-
-.bookmarklet-button {
-  display: inline-block;
-  padding: 10px 20px;
-  background: linear-gradient(to bottom, #ffc107, #e0a800);
-  color: #1a1a1a;
-  text-decoration: none;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: grab;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  border: 1px solid #e0a800;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-}
-
-.bookmarklet-button:hover,
-.bookmarklet-button:active {
-  background: linear-gradient(to bottom, #ffce3a, #ffc107);
-}
-
-/* Extract Tool Styles */
-.extract-tool-container {
-  margin: 10px 0;
-  padding: 15px;
-  background-color: #2a2a2a;
-  border-radius: 5px;
-  border: 1px solid #444;
-  max-width: 100%; /* Ensure it fits in parent */
-}
-
-/* More compact extraction tool */
-.extract-tool-container.compact {
-  padding: 10px;
-  margin: 5px 0;
-}
-
-.extract-tool-container.compact h3 {
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-}
-
-.extract-tool-container.compact .tabs {
-  margin-bottom: 8px;
-}
-
-.extract-tool-container.compact .tab-button {
-  padding: 3px 8px;
-  font-size: 0.8rem;
-}
-
-.extract-tool-container.compact .tab-content {
-  padding: 8px;
-}
-
-.extract-tool-container.compact .form-group {
-  margin-bottom: 6px;
-}
-
-.extract-tool-container.compact textarea {
-  min-height: 70px;
-}
-
-.tabs {
-  display: flex;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #444;
-  gap: 5px;
-}
-
-.tab-button {
-  background-color: transparent;
-  color: #aaa;
-  border: none;
-  padding: 5px 10px;
-  font-size: 0.9rem;
-}
-
-.tab-button.active {
-  color: #fff;
-  border-bottom: 3px solid #ffc107;
-  background-color: #333;
-}
-
-.tab-content {
-  padding: 10px;
-  background-color: #333;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-.tab-content ol {
-  margin-left: 15px;
-  margin-bottom: 10px;
-}
-
-.tab-content li {
-  margin-bottom: 5px;
-  color: #ddd;
-}
-
+/* Common keyboard styles */
 kbd {
   background-color: #444;
   color: #fff;
@@ -660,6 +365,15 @@ kbd {
   font-size: 0.9em;
 }
 
+/* Button row for better organization */
+.button-row {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+/* Primary button styles */
 .primary-button {
   background-color: #ffc107;
   color: #1a1a1a;
@@ -675,7 +389,7 @@ kbd {
 .primary-button.compact-button {
   width: auto;
   display: inline-block;
-  margin: 0; /* Remove margin since it's handled by button-row */
+  margin: 0;
   min-width: 180px;
   max-width: none;
 }
@@ -684,6 +398,7 @@ kbd {
   background-color: #e0a800;
 }
 
+/* Form styles */
 .form-group {
   margin-bottom: 10px;
 }
@@ -711,134 +426,28 @@ kbd {
   min-height: 100px;
 }
 
-/* Scroll controls */
-.scroll-speed-container {
+/* Tab system */
+.tabs {
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.scroll-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.keyboard-shortcuts {
-  font-size: 0.8rem;
-  color: #888;
-  margin-left: auto;
-}
-
-.keyboard-shortcuts ul {
-  list-style: none;
-  display: flex;
-  gap: 15px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  #song-content {
-    font-size: 1rem;
-  }
-
-  .control-group {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  #controls.collapsed h1 {
-    font-size: 1rem;
-  }
-}
-
-/* New styles for compact mode */
-#mini-controls {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(42, 42, 42, 0.8);
-  border-radius: 8px;
-  padding: 10px;
-  z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-#mini-controls.visible {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-#mini-controls button {
-  font-size: 0.8rem;
-  padding: 5px 10px;
-}
-
-.compact-controls-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 15px; /* Increased padding for more breathing room */
-  cursor: pointer;
-  min-height: 40px; /* Ensure consistent height */
-}
-
-.compact-controls-header h1 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-/* Mini controls styles */
-#mini-controls {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(42, 42, 42, 0.8);
-  border-radius: 8px;
-  padding: 10px;
-  z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-#mini-controls.visible {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-#mini-controls button {
-  font-size: 0.8rem;
-  padding: 5px 10px;
-}
-
-.mini-scroll-speed-container {
-  display: flex;
-  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #444;
   gap: 5px;
 }
 
-.mini-scroll-speed-container input[type="range"] {
-  width: 80px;
+.tab-button {
+  background-color: transparent;
+  color: #aaa;
+  border: none;
+  padding: 5px 10px;
+  font-size: 0.9rem;
 }
 
-.mini-speed-value {
-  color: #ffc107;
-  font-weight: bold;
-  min-width: 15px;
-  text-align: center;
+.tab-button.active {
+  color: #fff;
+  border-bottom: 3px solid #ffc107;
+  background-color: #333;
 }
 
-/* Button row for better organization */
-.button-row {
-  display: flex;
-  gap: 10px;
-  margin: 10px 0;
-  flex-wrap: wrap;
-}
-
-/* Updated tab system with simpler structure */
 #copy-paste-content,
 #manual-method-content {
   padding: 10px;
@@ -850,98 +459,6 @@ kbd {
 
 #manual-method-content {
   padding-top: 15px;
-}
-
-/* Saved songs view controls */
-.saved-songs-controls {
-  margin-bottom: 30px;
-  display: flex;
-  justify-content: flex-start;
-  position: relative;
-  z-index: 50; /* Ensure buttons are above other content */
-}
-
-.saved-songs-controls button.compact-button {
-  background-color: #3498db;
-}
-
-.saved-songs-controls button.compact-button:hover {
-  background-color: #2980b9;
-}
-
-/* Song Header Styling */
-.song-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.song-header h2 {
-  color: #ffc107;
-  margin-bottom: 0.2rem;
-}
-
-.song-header h3 {
-  font-weight: normal;
-  opacity: 0.8;
-}
-
-/* Fullscreen mode */
-.fullscreen #top-bar {
-  background-color: rgba(42, 42, 42, 0.8);
-  transition: background-color 0.3s ease;
-}
-
-.fullscreen #teleprompter {
-  margin-top: 0;
-  padding-top: 60px;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  #top-bar {
-    padding: 0 5px;
-    gap: 5px;
-  }
-
-  .logo-section h1 {
-    font-size: 0.85rem;
-  }
-
-  .dropdown-button {
-    padding: 0 8px;
-    font-size: 0.8rem;
-  }
-
-  .fa-caret-down {
-    display: none;
-  }
-
-  .scroll-speed-container label {
-    display: none;
-  }
-
-  .scroll-speed-container input[type="range"] {
-    width: 60px;
-  }
-
-  #song-content {
-    font-size: 1.2rem;
-  }
-}
-
-/* For extremely small screens */
-@media (max-width: 480px) {
-  .dropdown-button span {
-    display: none;
-  }
-
-  .song-navigation {
-    padding-left: 5px;
-  }
-
-  .teleprompter-controls {
-    gap: 2px;
-  }
 }
 
 /* Saved Songs Styling */
@@ -1041,15 +558,6 @@ kbd {
   font-size: 1rem;
 }
 
-.welcome-message kbd {
-  background-color: #444;
-  color: #fff;
-  padding: 2px 5px;
-  border-radius: 3px;
-  font-family: monospace;
-  font-size: 0.9em;
-}
-
 /* Import/Export Styling */
 .success-status {
   background-color: rgba(40, 167, 69, 0.8);
@@ -1079,15 +587,419 @@ kbd {
   gap: 10px;
 }
 
-/* Update keyboard shortcuts to include Import/Export */
-#shortcuts-popup ul li kbd {
-  display: inline-block;
-  padding: 3px 5px;
-  font-size: 0.8rem;
-  line-height: 1;
-  color: #fff;
+/* Song Header Styling */
+.song-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.song-header h2 {
+  color: #ffc107;
+  margin-bottom: 0.2rem;
+}
+
+.song-header h3 {
+  font-weight: normal;
+  opacity: 0.8;
+}
+
+/* ==============================
+   MOBILE STYLES
+   ============================== */
+
+/* Mobile Menu Container */
+.mobile-menu-container {
+  display: none; /* Hidden by default, shown only on mobile */
+}
+
+/* Mobile Top Panel */
+.mobile-top-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background-color: #2a2a2a;
+  display: none; /* Hidden by default, shown in media query */
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1000;
+  border-bottom: 1px solid #444;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.hamburger-button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+  color: white;
+  border: none;
+  margin-left: 10px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.hamburger-button i {
+  font-size: 1.5rem;
+  color: #ffc107;
+}
+
+.mobile-logo {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #ffc107;
+  flex: 1;
+  text-align: center;
+  padding-right: 40px; /* Balance the hamburger button space */
+}
+
+/* Mobile Menu */
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #1a1a1a;
+  z-index: 999;
+  overflow-y: auto;
+  padding: 60px 20px 20px;
+  flex-direction: column;
+}
+
+.mobile-menu.active {
+  display: flex;
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #2a2a2a;
+  padding: 10px 15px;
+  border-bottom: 1px solid #444;
+  z-index: 1000;
+}
+
+.mobile-menu-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #ffc107;
+}
+
+.mobile-menu-header button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  padding: 5px;
+  cursor: pointer;
+}
+
+/* Mobile Menu Sections */
+.mobile-menu-section {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 20px;
+}
+
+.mobile-menu-section h3 {
+  color: #ffc107;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.mobile-menu-button {
+  display: block;
+  width: 100%;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  text-align: left;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.mobile-menu-button i {
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+}
+
+.mobile-menu-button:hover,
+.mobile-menu-button:active {
   background-color: #444;
-  border-radius: 3px;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  margin: 0 2px;
+}
+
+/* Mobile Manual Form */
+#mobile-manual-form {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #1a1a1a;
+  z-index: 999;
+  overflow-y: auto;
+  padding: 60px 20px 20px;
+  flex-direction: column;
+  display: none;
+}
+
+#mobile-manual-form.active {
+  display: flex;
+}
+
+.mobile-form-group {
+  margin-bottom: 15px;
+}
+
+.mobile-form-group input,
+.mobile-form-group textarea {
+  width: 100%;
+  background-color: #222;
+  border: 1px solid #444;
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.mobile-form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Mobile Teleprompter Controls */
+.mobile-teleprompter-controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(42, 42, 42, 0.9);
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 900;
+  border-top: 1px solid #444;
+}
+
+.mobile-scroll-speed-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 15px;
+}
+
+.mobile-scroll-speed-container label {
+  font-size: 0.8rem;
+}
+
+.mobile-scroll-speed-container input[type="range"] {
+  width: 80px;
+}
+
+.mobile-teleprompter-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.mobile-teleprompter-buttons button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #444;
+  color: white;
+  border: none;
+  font-size: 1.1rem;
+}
+
+.mobile-teleprompter-buttons button.start-button {
+  background-color: #4caf50;
+}
+
+.mobile-teleprompter-buttons button.stop-button {
+  background-color: #f44336;
+}
+
+/* Mobile Saved Songs List */
+.mobile-saved-songs-list {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #1a1a1a;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.mobile-saved-songs-header {
+  background-color: #2a2a2a;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+}
+
+.mobile-saved-songs-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #ffc107;
+}
+
+.mobile-saved-songs-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.mobile-saved-songs-container {
+  overflow-y: auto;
+  flex: 1;
+  padding: 10px;
+}
+
+.mobile-saved-songs-empty {
+  padding: 20px;
+  text-align: center;
+  color: #ddd;
+}
+
+.mobile-saved-songs-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mobile-saved-songs-list li {
+  padding: 15px 10px;
+  border-bottom: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-song-info {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.mobile-song-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.mobile-load-button {
+  flex: 1;
+  padding: 10px 0;
+  background-color: #ffc107;
+  border: none;
+  border-radius: 4px;
+  color: #1a1a1a;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.mobile-delete-button {
+  width: 80px;
+  padding: 10px 0;
+  background-color: #e74c3c;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  /* Hide desktop elements */
+  #top-bar {
+    display: none;
+  }
+
+  /* Show mobile elements */
+  .mobile-menu-container {
+    display: block;
+  }
+
+  .mobile-top-panel {
+    display: flex;
+  }
+
+  /* Adjust teleprompter for mobile */
+  #teleprompter {
+    margin-top: 50px;
+    height: calc(100vh - 50px);
+    padding: 1rem;
+    padding-bottom: 70px; /* Space for mobile controls */
+  }
+
+  /* Adjust font size for mobile */
+  #song-content {
+    font-size: 1.2rem;
+  }
+
+  /* Make chords the same size as lyrics in mobile view */
+  .chord {
+    font-size: 1.2rem;
+  }
+
+  /* Adjust controls for mobile */
+  .control-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Hide caret in dropdown buttons */
+  .fa-caret-down {
+    display: none;
+  }
+}
+
+/* For extremely small screens */
+@media (max-width: 480px) {
+  .dropdown-button span {
+    display: none;
+  }
+
+  .song-navigation {
+    padding-left: 5px;
+  }
+
+  .teleprompter-controls {
+    gap: 2px;
+  }
+
+  /* Smaller buttons for very small screens */
+  .mobile-teleprompter-buttons button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobile-scroll-speed-container input[type="range"] {
+    width: 60px;
+  }
 }

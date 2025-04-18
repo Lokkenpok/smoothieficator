@@ -190,6 +190,134 @@
         </div>
       </div>
 
+      <!-- Mobile Menu for small screens -->
+      <div class="mobile-menu-container">
+        <!-- Mobile top panel with hamburger and logo -->
+        <div class="mobile-top-panel">
+          <button class="hamburger-button" id="mobile-menu-toggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h2 class="mobile-logo">Smoothieficator</h2>
+        </div>
+
+        <div class="mobile-menu" id="mobile-menu">
+          <div class="mobile-menu-header">
+            <h2>Menu</h2>
+          </div>
+
+          <!-- Add Song Section -->
+          <div class="mobile-menu-section">
+            <h3>Add Song</h3>
+            <button class="mobile-menu-button" id="mobile-add-clipboard">
+              <i class="fas fa-paste"></i> Add Song from Clipboard
+            </button>
+            <button class="mobile-menu-button" id="mobile-add-manual">
+              <i class="fas fa-edit"></i> Add Song Manually
+            </button>
+          </div>
+
+          <!-- Saved Songs Section -->
+          <div class="mobile-menu-section">
+            <h3>Song Management</h3>
+            <button class="mobile-menu-button" id="mobile-saved-songs">
+              <i class="fas fa-list"></i> Saved Songs
+            </button>
+            <button class="mobile-menu-button" id="mobile-export">
+              <i class="fas fa-download"></i> Export Songs
+            </button>
+            <button class="mobile-menu-button" id="mobile-import">
+              <i class="fas fa-upload"></i> Import Songs
+            </button>
+          </div>
+
+          <!-- Other Controls Section -->
+          <div class="mobile-menu-section">
+            <h3>Other Controls</h3>
+            <button class="mobile-menu-button" id="mobile-edit-mode">
+              <i class="fas fa-edit"></i> Toggle Edit Mode
+            </button>
+          </div>
+        </div>
+
+        <!-- Manual input form for mobile -->
+        <div id="mobile-manual-form" class="mobile-menu hidden">
+          <div class="mobile-menu-header">
+            <h2>Add Song Manually</h2>
+            <button id="close-mobile-manual">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div class="mobile-form-group">
+            <input
+              type="text"
+              id="mobile-song-title"
+              placeholder="Enter song title"
+            />
+          </div>
+          <div class="mobile-form-group">
+            <input
+              type="text"
+              id="mobile-song-artist"
+              placeholder="Enter artist name"
+            />
+          </div>
+          <div class="mobile-form-group">
+            <textarea
+              id="mobile-song-content"
+              rows="8"
+              placeholder="Paste chords and lyrics here"
+            ></textarea>
+          </div>
+          <button id="mobile-create-song" class="primary-button">
+            Create Song
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile teleprompter controls -->
+      <div
+        class="mobile-teleprompter-controls hidden"
+        id="mobile-teleprompter-controls"
+      >
+        <div class="mobile-scroll-speed-container">
+          <label for="mobile-scroll-speed">Speed:</label>
+          <input
+            type="range"
+            id="mobile-scroll-speed"
+            min="1"
+            max="25"
+            value="8"
+          />
+          <span class="speed-value" id="mobile-speed-value">8</span>
+        </div>
+        <div class="mobile-teleprompter-buttons">
+          <button
+            id="mobile-start-scroll"
+            title="Start Scrolling"
+            class="start-button"
+          >
+            <i class="fas fa-play"></i>
+          </button>
+          <button
+            id="mobile-stop-scroll"
+            class="stop-button hidden"
+            title="Stop Scrolling"
+          >
+            <i class="fas fa-pause"></i>
+          </button>
+          <button id="mobile-reset-scroll" title="Reset Scroll">
+            <i class="fas fa-arrow-up"></i>
+          </button>
+          <button id="mobile-prev-song" title="Previous Song">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <button id="mobile-next-song" title="Next Song">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
       <div id="loading-indicator" class="hidden">Loading song...</div>
       <div id="error-load" class="hidden">
         Error loading song. Please try again.
@@ -216,5 +344,6 @@
     <script src="js/scraper.js"></script>
     <script src="js/teleprompter.js"></script>
     <script src="js/extractor.js"></script>
+    <script src="js/mobile.js"></script>
   </body>
 </html>

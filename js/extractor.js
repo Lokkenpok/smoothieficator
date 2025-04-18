@@ -161,6 +161,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (content) {
           processClipboardContent(content);
+
+          // Fire an event to let other components know a song was added via paste
+          // This will help the mobile view know when to close the paste view
+          document.dispatchEvent(new CustomEvent("songPasteProcessed"));
         }
       };
 
@@ -728,4 +732,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }, 8000);
   }
+
+  // Expose processChords function globally for mobile.js to use
+  window.processChords = processChords;
 });
