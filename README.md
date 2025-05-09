@@ -25,7 +25,7 @@ A free and open lyrics and chords teleprompter web application. This tool allows
   - Precise chord positioning and formatting
   - Section highlighting (verse, chorus, bridge, etc.)
 - **Fullscreen Mode**: Distraction-free viewing during performances
-- **Responsive Design**: Works on multiple devices/screen sizes (note that mobile support is not yet implemented)
+- **Responsive Design**: Works on multiple devices/screen sizes
 - **Local Storage**: All songs are saved in your browser's local storage
 - **Navigation**: Easily navigate between songs using buttons or keyboard shortcuts
 

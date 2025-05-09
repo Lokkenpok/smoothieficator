@@ -603,6 +603,15 @@ kbd {
   opacity: 0.8;
 }
 
+/* Spacer for empty lines in teleprompter */
+.spacer {
+  min-height: 2.2em; /* visually matches a blank lyric line */
+  height: 2.2em;
+  display: block;
+  width: 100%;
+  /* Optionally add a little margin for clarity */
+}
+
 /* ==============================
    MOBILE STYLES
    ============================== */
