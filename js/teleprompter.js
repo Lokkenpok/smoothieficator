@@ -184,76 +184,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Create notification that we're in edit mode with save and cancel buttons
     const editNotice = document.createElement("div");
-    editNotice.classList.add("edit-mode-notice");
-    editNotice.style.cssText = `
-      background-color: #ffc107;
-      color: #1a1a1a;
-      padding: 0;
-      text-align: center;
-      font-weight: bold;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 50px;
-      z-index: 1000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    `;
+    editNotice.classList.add("edit-mode-notice"); // Main class for the notice bar
 
-    // Add edit mode text and buttons
+    // Add edit mode text and shortcut info
+    const editModeTextContainer = document.createElement("div");
+    editModeTextContainer.classList.add("edit-mode-text-container");
+
     const editModeText = document.createElement("span");
     editModeText.textContent = "Edit Mode";
-    editModeText.style.marginRight = "15px";
 
-    // Add shortcut info
     const shortcutInfo = document.createElement("small");
     shortcutInfo.textContent = "(Ctrl+Enter to save)";
-    shortcutInfo.style.cssText = `
-      font-weight: normal;
-      font-size: 12px;
-      opacity: 0.8;
-      margin-left: 5px;
-    `;
+
     editModeText.appendChild(shortcutInfo);
+    editModeTextContainer.appendChild(editModeText);
 
     const buttonsContainer = document.createElement("div");
-    buttonsContainer.style.display = "flex";
-    buttonsContainer.style.alignItems = "center";
+    buttonsContainer.classList.add("buttons-container"); // Class for the button container
 
     // Create Accept button
     const acceptButton = document.createElement("button");
     acceptButton.textContent = "Accept Changes";
-    acceptButton.style.cssText = `
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-left: 10px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-      height: 30px;
-    `;
+    acceptButton.classList.add("accept-button"); // Class for accept button styling
     acceptButton.onclick = saveEditedSong;
 
     // Create Cancel button
     const cancelButton = document.createElement("button");
     cancelButton.textContent = "Cancel";
-    cancelButton.style.cssText = `
-      background-color: #f44336;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-left: 10px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-      height: 30px;
-    `;
+    cancelButton.classList.add("cancel-button"); // Class for cancel button styling
     cancelButton.onclick = () => {
       if (confirm("Exit edit mode? Any unsaved changes will be lost.")) {
         exitEditMode();
@@ -282,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     buttonsContainer.appendChild(cancelButton);
 
     // Add text and buttons to notice
-    editNotice.appendChild(editModeText);
+    editNotice.appendChild(editModeTextContainer);
     editNotice.appendChild(buttonsContainer);
 
     // Add notice to DOM

@@ -603,6 +603,96 @@ kbd {
   opacity: 0.8;
 }
 
+/* Edit Mode Notice Bar Styles */
+.edit-mode-notice {
+  background-color: #ffc107; /* Base background from JS */
+  color: #1a1a1a; /* Base text color from JS */
+  font-weight: bold; /* Base font weight from JS */
+  padding: 10px;
+  text-align: center;
+  position: fixed; /* Base position from JS */
+  top: 0; /* Base position from JS */
+  left: 0; /* Base position from JS */
+  right: 0; /* Base position from JS */
+  z-index: 1000; /* Base z-index from JS */
+  display: flex;
+  flex-direction: column; /* Stack items vertically by default for mobile */
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.edit-mode-notice .edit-mode-text-container {
+  /* Container for "Edit Mode" and shortcut */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap; /* Allow text to wrap if needed */
+}
+
+.edit-mode-notice .edit-mode-text-container small {
+  font-weight: normal;
+  font-size: 12px;
+  opacity: 0.8;
+  margin-left: 5px;
+  white-space: nowrap;
+}
+
+.edit-mode-notice .buttons-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.edit-mode-notice button {
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 1.2;
+  min-height: 30px;
+  flex-grow: 1;
+  max-width: 150px; /* Max width to prevent overly wide buttons */
+}
+
+.edit-mode-notice button.accept-button {
+  background-color: #4caf50; /* Accept button green */
+}
+
+.edit-mode-notice button.cancel-button {
+  background-color: #f44336; /* Cancel button red */
+}
+
+/* Media query for larger screens to revert to horizontal layout */
+@media (min-width: 600px) {
+  .edit-mode-notice {
+    flex-direction: row;
+    height: 50px; /* Restore fixed height for larger screens */
+    padding: 0 10px; /* Adjust padding for horizontal layout */
+  }
+
+  .edit-mode-notice .edit-mode-text-container {
+    margin-right: 15px;
+    flex-wrap: nowrap;
+  }
+
+  .edit-mode-notice .buttons-container {
+    width: auto; /* Reset width */
+    flex-wrap: nowrap;
+  }
+
+  .edit-mode-notice button {
+    flex-grow: 0; /* Buttons don't need to grow on larger screens */
+  }
+}
+
 /* Spacer for empty lines in teleprompter */
 .spacer {
   min-height: 2.2em; /* visually matches a blank lyric line */
