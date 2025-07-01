@@ -46,7 +46,7 @@ A free and open lyrics and chords teleprompter web application. This tool allows
 - **F**: Toggle fullscreen mode
 - **Esc**: Exit fullscreen or close dropdowns
 - **←/→**: Navigate to previous/next saved song
-- **1-9**: Set scroll speed (1 = slowest, 9 = fastest)
+- **+/-**: Increase/decrease scroll speed by one step
 - **E**: Open extract song dropdown
 - **S**: Open saved songs dropdown
 - **K**: Show keyboard shortcuts

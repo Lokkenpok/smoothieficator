@@ -749,34 +749,57 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         break;
 
-      // Number keys 1-9 for speed control
-      case "1":
-      case "2":
-      case "3":
-      case "4":
-      case "5":
-      case "6":
-      case "7":
-      case "8":
-      case "9":
-        const num = parseInt(e.key);
-        if (num >= 1 && num <= 9) {
-          scrollSpeedInput.value = num;
-
-          // Update display
-          if (speedValueDisplay) {
-            speedValueDisplay.textContent = num;
-          }
-
-          // Update scrolling if active
-          if (isScrolling) {
-            stopScrolling();
-            startScrolling();
-          }
-
-          // Save the scroll speed for current song
-          saveScrollSpeedForCurrentSong();
+      // Plus and minus keys for speed control (but not when Ctrl is pressed for browser zoom)
+      case "+":
+      case "=": // Plus key (= key without shift)
+        // Allow browser zoom if Ctrl is pressed
+        if (e.ctrlKey || e.metaKey) {
+          return; // Let browser handle Ctrl+Plus for zoom
         }
+        e.preventDefault();
+        const currentSpeedUp = parseInt(scrollSpeedInput.value);
+        const newSpeedUp = Math.min(currentSpeedUp + 1, 25); // Max speed is 25
+        scrollSpeedInput.value = newSpeedUp;
+
+        // Update display
+        if (speedValueDisplay) {
+          speedValueDisplay.textContent = newSpeedUp;
+        }
+
+        // Update scrolling if active
+        if (isScrolling) {
+          stopScrolling();
+          startScrolling();
+        }
+
+        // Save the scroll speed for current song
+        saveScrollSpeedForCurrentSong();
+        break;
+
+      case "-":
+      case "_": // Minus key (- key with shift, though unlikely to be used)
+        // Allow browser zoom if Ctrl is pressed
+        if (e.ctrlKey || e.metaKey) {
+          return; // Let browser handle Ctrl+Minus for zoom
+        }
+        e.preventDefault();
+        const currentSpeedDown = parseInt(scrollSpeedInput.value);
+        const newSpeedDown = Math.max(currentSpeedDown - 1, 1); // Min speed is 1
+        scrollSpeedInput.value = newSpeedDown;
+
+        // Update display
+        if (speedValueDisplay) {
+          speedValueDisplay.textContent = newSpeedDown;
+        }
+
+        // Update scrolling if active
+        if (isScrolling) {
+          stopScrolling();
+          startScrolling();
+        }
+
+        // Save the scroll speed for current song
+        saveScrollSpeedForCurrentSong();
         break;
 
       case "ArrowLeft":
