@@ -21,11 +21,15 @@ A free and open lyrics and chords teleprompter web application. This tool allows
   - Export all your saved songs as a JSON file for backup or transfer
   - Import a previously exported JSON file to restore your songs
 - **Auto-scrolling Teleprompter**:
-  - Adjustable speeds
+  - Adjustable speeds with per-song speed memory
   - Precise chord positioning and formatting
   - Section highlighting (verse, chorus, bridge, etc.)
-- **Fullscreen Mode**: Distraction-free viewing during performances
-- **Responsive Design**: Works on multiple devices/screen sizes
+- **Advanced Display Controls**:
+  - Zoom functionality (50%-200%) with per-song zoom memory
+  - Fullscreen mode for distraction-free viewing during performances
+- **In-Song Editing**: Edit song content directly in the teleprompter view
+- **Fullscreen Song Browser**: Navigate your entire song library in a dedicated fullscreen view
+- **Responsive Design**: Works on multiple devices/screen sizes with touch-optimized mobile interface
 - **Local Storage**: All songs are saved in your browser's local storage
 - **Navigation**: Easily navigate between songs using buttons or keyboard shortcuts
 
@@ -34,9 +38,11 @@ A free and open lyrics and chords teleprompter web application. This tool allows
 1. Extract songs using one of the following methods:
    - **Copy-Paste**: Use a print-friendly view or plain text from any chord/lyric source for best results
    - **Manual Entry**: Enter song title, artist, and paste or type lyrics with chords
-2. Adjust scroll speed using the slider in the top bar
+2. Adjust scroll speed and zoom level using the controls in the top bar (settings are remembered per song)
 3. Use playback controls to start/stop scrolling or reset to the top
 4. Navigate between saved songs using the navigation buttons or keyboard shortcuts
+5. Use edit mode (E key) to modify songs directly in the teleprompter view
+6. Access your full song library with the fullscreen song browser (S key)
 
 ## Keyboard Shortcuts
 
@@ -44,11 +50,15 @@ A free and open lyrics and chords teleprompter web application. This tool allows
 - **↑/↓**: Manually scroll up/down
 - **Home**: Reset scroll to top
 - **F**: Toggle fullscreen mode
-- **Esc**: Exit fullscreen or close dropdowns
+- **E**: Toggle in-song edit mode
+- **Ctrl+Enter**: Save changes (when in edit mode)
+- **Esc**: Exit fullscreen, close dropdowns, or cancel edits (when in edit mode)
 - **←/→**: Navigate to previous/next saved song
 - **+/-**: Increase/decrease scroll speed by one step
-- **E**: Open extract song dropdown
-- **S**: Open saved songs dropdown
+- **Q/W**: Decrease/increase zoom level
+- **A**: Open add song dropdown
+- **S**: Open fullscreen saved songs browser
+- **I**: Open import/export dropdown
 - **K**: Show keyboard shortcuts
 
 ## Installation
