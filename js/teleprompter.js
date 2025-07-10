@@ -3,12 +3,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const teleprompter = document.getElementById("teleprompter");
   const songContent = document.getElementById("song-content");
   const scrollSpeedInput = document.getElementById("scroll-speed");
+  const zoomLevelInput = document.getElementById("zoom-level");
   const startScrollBtn = document.getElementById("start-scroll");
   const stopScrollBtn = document.getElementById("stop-scroll");
   const resetScrollBtn = document.getElementById("reset-scroll");
   const toggleFullscreenBtn = document.getElementById("toggle-fullscreen");
   const appContainer = document.getElementById("app-container");
   const speedValueDisplay = document.querySelector(".speed-value");
+  const zoomValueDisplay = document.querySelector(".zoom-value");
   const topBar = document.getElementById("top-bar");
 
   // Scroll state
@@ -28,11 +30,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // Flag to indicate navigation in progress (to prevent duplicate saves)
   window.navigationInProgress = false;
 
+  // Zoom state
+  let currentZoomLevel = 100; // Default zoom level in percentage
+
   // Initialize scroll controls
   startScrollBtn.addEventListener("click", startScrolling);
   stopScrollBtn.addEventListener("click", stopScrolling);
   resetScrollBtn.addEventListener("click", resetScroll);
   toggleFullscreenBtn.addEventListener("click", toggleFullscreen);
+
+  // Initialize zoom controls
+  if (zoomLevelInput && zoomValueDisplay) {
+    zoomLevelInput.addEventListener("input", () => {
+      currentZoomLevel = parseInt(zoomLevelInput.value);
+      updateZoom();
+      saveZoomLevelForCurrentSong();
+    });
+
+    // Initialize zoom display
+    updateZoom();
+  }
 
   // Update speed display when slider changes
   scrollSpeedInput.addEventListener("input", () => {
@@ -56,6 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("songLoaded", function () {
     resetScroll();
     loadSavedSongs(); // Update the saved songs array and current index
+    loadZoomLevelForCurrentSong(); // Load the zoom level for the song
   });
 
   function startScrolling() {
@@ -132,6 +150,101 @@ document.addEventListener("DOMContentLoaded", () => {
     // Speed 13: ~2.6 pixels per update (medium)
     // Speed 25: ~5.0 pixels per update (very fast)
     return 0.2 + (speedValue - 1) * 0.2;
+  }
+
+  // Update zoom level and apply to song content
+  function updateZoom() {
+    if (zoomValueDisplay) {
+      zoomValueDisplay.textContent = currentZoomLevel + "%";
+    }
+
+    // Apply zoom to the song content
+    const songContentElement = document.getElementById("song-content");
+    if (songContentElement) {
+      // Calculate the font size based on zoom level
+      // Base font size is 1.8rem, scale it based on zoom percentage
+      const baseFontSize = 1.8;
+      const scaledFontSize = (baseFontSize * currentZoomLevel) / 100;
+      songContentElement.style.fontSize = scaledFontSize + "rem";
+
+      // Also scale chord font size proportionally
+      const chords = songContentElement.querySelectorAll(".chord");
+      const baseChordSize = 1.9; // Base chord size is 1.9rem
+      const scaledChordSize = (baseChordSize * currentZoomLevel) / 100;
+      chords.forEach((chord) => {
+        chord.style.fontSize = scaledChordSize + "rem";
+      });
+    }
+  }
+
+  // Save current zoom level for the displayed song
+  function saveZoomLevelForCurrentSong() {
+    // Get current song info
+    const currentTitle = document.querySelector(".song-header h2")?.textContent;
+    const currentArtist = document
+      .querySelector(".song-header h3")
+      ?.textContent?.replace(/by\s+/i, "")
+      .trim();
+
+    if (currentTitle && currentArtist && !window.navigationInProgress) {
+      // Get saved songs from localStorage
+      const savedSongsJson = localStorage.getItem("savedSongs");
+      if (savedSongsJson) {
+        const savedSongs = JSON.parse(savedSongsJson);
+
+        // Find and update the matching song
+        Object.keys(savedSongs).forEach((timestamp) => {
+          const song = savedSongs[timestamp];
+          if (song.title === currentTitle && song.artist === currentArtist) {
+            song.zoomLevel = currentZoomLevel;
+          }
+        });
+
+        // Save back to localStorage
+        localStorage.setItem("savedSongs", JSON.stringify(savedSongs));
+      }
+    }
+  }
+
+  // Load zoom level for the current song
+  function loadZoomLevelForCurrentSong() {
+    // Get current song info
+    const currentTitle = document.querySelector(".song-header h2")?.textContent;
+    const currentArtist = document
+      .querySelector(".song-header h3")
+      ?.textContent?.replace(/by\s+/i, "")
+      .trim();
+
+    if (currentTitle && currentArtist) {
+      // Get saved songs from localStorage
+      const savedSongsJson = localStorage.getItem("savedSongs");
+      if (savedSongsJson) {
+        const savedSongs = JSON.parse(savedSongsJson);
+
+        // Find the matching song and get its zoom level
+        for (const timestamp of Object.keys(savedSongs)) {
+          const song = savedSongs[timestamp];
+          if (song.title === currentTitle && song.artist === currentArtist) {
+            if (song.zoomLevel) {
+              currentZoomLevel = song.zoomLevel;
+              if (zoomLevelInput) {
+                zoomLevelInput.value = currentZoomLevel;
+              }
+              updateZoom();
+              return;
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    // If no saved zoom level found, use default
+    currentZoomLevel = 100;
+    if (zoomLevelInput) {
+      zoomLevelInput.value = currentZoomLevel;
+    }
+    updateZoom();
   }
 
   function toggleFullscreen() {
@@ -571,6 +684,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Display the song using the existing function
     if (typeof window.processSongFromBookmarklet === "function") {
       window.processSongFromBookmarklet(song);
+      // Load zoom level for this song after a short delay to ensure DOM is updated
+      setTimeout(() => {
+        loadZoomLevelForCurrentSong();
+      }, 100);
     }
   }
 
@@ -628,6 +745,11 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         saveEditedSong();
       }
+      return;
+    }
+
+    // Don't handle keyboard events if fullscreen saved songs view is open
+    if (document.querySelector(".fullscreen-songs-view")) {
       return;
     }
 
@@ -705,6 +827,18 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
 
       case "Escape":
+        // Check if fullscreen saved songs view is open and close it
+        const fullscreenView = document.querySelector(".fullscreen-songs-view");
+        if (fullscreenView) {
+          e.preventDefault();
+          if (typeof window.closeFullscreenSavedSongs === "function") {
+            window.closeFullscreenSavedSongs();
+          } else {
+            fullscreenView.remove();
+          }
+          return;
+        }
+
         if (isEditMode) {
           // Exit edit mode
           e.preventDefault();
@@ -802,6 +936,30 @@ document.addEventListener("DOMContentLoaded", () => {
         saveScrollSpeedForCurrentSong();
         break;
 
+      case "Q":
+      case "q":
+        // Decrease zoom
+        e.preventDefault();
+        const currentZoomDown = parseInt(zoomLevelInput.value);
+        const newZoomDown = Math.max(currentZoomDown - 10, 50); // Min zoom is 50%
+        zoomLevelInput.value = newZoomDown;
+        currentZoomLevel = newZoomDown;
+        updateZoom();
+        saveZoomLevelForCurrentSong();
+        break;
+
+      case "W":
+      case "w":
+        // Increase zoom
+        e.preventDefault();
+        const currentZoomUp = parseInt(zoomLevelInput.value);
+        const newZoomUp = Math.min(currentZoomUp + 10, 200); // Max zoom is 200%
+        zoomLevelInput.value = newZoomUp;
+        currentZoomLevel = newZoomUp;
+        updateZoom();
+        saveZoomLevelForCurrentSong();
+        break;
+
       case "ArrowLeft":
         // Check if we're in the song view and not on the saved songs list
         e.preventDefault();
@@ -858,12 +1016,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
       case "S":
       case "s":
-        // Toggle saved songs dropdown
+        // Show fullscreen saved songs view
         e.preventDefault();
-        // Directly click the saved-songs-button instead of just toggling the dropdown
-        const savedSongsBtn = document.getElementById("saved-songs-button");
-        if (savedSongsBtn) {
-          savedSongsBtn.click(); // This will trigger the click event handler
+        // Close any open dropdowns first
+        const openDropdowns = document.querySelectorAll(
+          ".dropdown-content:not(.hidden)"
+        );
+        openDropdowns.forEach((dropdown) => dropdown.classList.add("hidden"));
+
+        // Close shortcuts popup if open
+        const shortcutsPopupS = document.getElementById("shortcuts-popup");
+        if (shortcutsPopupS && !shortcutsPopupS.classList.contains("hidden")) {
+          shortcutsPopupS.classList.add("hidden");
+        }
+
+        // Check if fullscreen view function exists and call it
+        if (typeof window.showFullscreenSavedSongs === "function") {
+          window.showFullscreenSavedSongs();
+        } else {
+          // Fallback to old behavior if function doesn't exist
+          const savedSongsBtn = document.getElementById("saved-songs-button");
+          if (savedSongsBtn) {
+            savedSongsBtn.click();
+          }
         }
         break;
 

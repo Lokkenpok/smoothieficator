@@ -126,6 +126,19 @@
 
         <!-- Teleprompter controls section -->
         <div class="teleprompter-controls">
+          <div class="zoom-container">
+            <label for="zoom-level">Zoom:</label>
+            <input
+              type="range"
+              id="zoom-level"
+              min="50"
+              max="200"
+              value="100"
+              step="10"
+            />
+            <span class="zoom-value">100%</span>
+          </div>
+
           <div class="scroll-speed-container">
             <label for="scroll-speed">Speed:</label>
             <input type="range" id="scroll-speed" min="1" max="25" value="8" />
@@ -169,6 +182,7 @@
               <li>
                 <kbd>+</kbd>/<kbd>-</kbd> - Increase/decrease scroll speed
               </li>
+              <li><kbd>Q</kbd>/<kbd>W</kbd> - Decrease/increase zoom</li>
               <li><kbd>←</kbd><kbd>→</kbd> - Previous/Next song</li>
               <li><kbd>A</kbd> - Add song menu</li>
               <li><kbd>S</kbd> - Saved songs menu</li>

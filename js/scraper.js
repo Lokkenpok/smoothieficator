@@ -327,12 +327,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (savedSongsBtn && songsDropdownContent) {
     savedSongsBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      songsDropdownContent.classList.toggle("hidden");
 
-      // Update the saved songs list
-      updateSavedSongsDropdown();
+      // Show fullscreen view instead of dropdown
+      showFullscreenSavedSongs();
 
-      // Close other dropdowns
+      // Close any open dropdowns first
       const extractDropdownContent = document.querySelector(
         "#extract-dropdown .dropdown-content"
       );
@@ -341,6 +340,17 @@ document.addEventListener("DOMContentLoaded", () => {
         !extractDropdownContent.classList.contains("hidden")
       ) {
         extractDropdownContent.classList.add("hidden");
+      }
+
+      // Close import/export dropdown
+      const importExportDropdown = document.querySelector(
+        "#import-export-dropdown .dropdown-content"
+      );
+      if (
+        importExportDropdown &&
+        !importExportDropdown.classList.contains("hidden")
+      ) {
+        importExportDropdown.classList.add("hidden");
       }
 
       // Close shortcuts popup if open
@@ -675,4 +685,359 @@ document.addEventListener("DOMContentLoaded", () => {
       importStatus.classList.add("hidden");
     }, 5000);
   }
+
+  // Fullscreen saved songs functionality
+  let fullscreenSongsView = null;
+  let selectedSongIndex = 0;
+  let fullscreenSongsList = [];
+
+  // Show fullscreen saved songs view
+  function showFullscreenSavedSongs() {
+    const savedSongsData = JSON.parse(
+      localStorage.getItem("savedSongs") || "{}"
+    );
+
+    // Create fullscreen overlay
+    fullscreenSongsView = document.createElement("div");
+    fullscreenSongsView.classList.add("fullscreen-songs-view");
+
+    // Header
+    const header = document.createElement("div");
+    header.classList.add("fullscreen-songs-header");
+
+    const title = document.createElement("h2");
+    title.textContent = "Your Saved Songs";
+
+    const closeButton = document.createElement("button");
+    closeButton.classList.add("fullscreen-songs-close");
+    closeButton.textContent = "Close";
+    closeButton.addEventListener("click", closeFullscreenSavedSongs);
+
+    header.appendChild(title);
+    header.appendChild(closeButton);
+    fullscreenSongsView.appendChild(header);
+
+    // Content area
+    const content = document.createElement("div");
+    content.classList.add("fullscreen-songs-content");
+
+    const savedSongsEntries = Object.entries(savedSongsData);
+
+    if (savedSongsEntries.length === 0) {
+      const emptyMessage = document.createElement("div");
+      emptyMessage.classList.add("fullscreen-songs-empty");
+      emptyMessage.textContent =
+        "No songs saved yet. Add a song to get started!";
+      content.appendChild(emptyMessage);
+    } else {
+      // Sort by newest first
+      savedSongsEntries.sort((a, b) => b[0].localeCompare(a[0]));
+      fullscreenSongsList = savedSongsEntries;
+      selectedSongIndex = 0;
+
+      const songsList = document.createElement("ul");
+      songsList.classList.add("fullscreen-songs-list");
+      songsList.id = "fullscreen-songs-list";
+
+      savedSongsEntries.forEach(([id, song], index) => {
+        const songItem = document.createElement("li");
+        songItem.dataset.songId = id;
+        songItem.dataset.index = index;
+
+        if (index === selectedSongIndex) {
+          songItem.classList.add("selected");
+        }
+
+        // Song info
+        const songInfo = document.createElement("div");
+        songInfo.classList.add("fullscreen-songs-info");
+
+        const songTitle = document.createElement("div");
+        songTitle.classList.add("fullscreen-songs-title");
+        songTitle.textContent = song.title;
+
+        const songArtist = document.createElement("div");
+        songArtist.classList.add("fullscreen-songs-artist");
+        songArtist.textContent = `by ${song.artist}`;
+
+        songInfo.appendChild(songTitle);
+        songInfo.appendChild(songArtist);
+
+        // Actions
+        const actions = document.createElement("div");
+        actions.classList.add("fullscreen-songs-actions");
+
+        const loadButton = document.createElement("button");
+        loadButton.classList.add("fullscreen-songs-load");
+        loadButton.textContent = "Load";
+        loadButton.addEventListener("click", () => {
+          displaySong(song);
+          closeFullscreenSavedSongs();
+        });
+
+        const renameButton = document.createElement("button");
+        renameButton.classList.add("fullscreen-songs-rename");
+        renameButton.textContent = "Rename";
+        renameButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          renameSongInFullscreen(id, song, songItem);
+        });
+
+        const deleteButton = document.createElement("button");
+        deleteButton.classList.add("fullscreen-songs-delete");
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          deleteSongInFullscreen(id, song);
+        });
+
+        actions.appendChild(loadButton);
+        actions.appendChild(renameButton);
+        actions.appendChild(deleteButton);
+
+        songItem.appendChild(songInfo);
+        songItem.appendChild(actions);
+
+        // Add click handler for song selection
+        songItem.addEventListener("click", () => {
+          selectSongInFullscreen(index);
+        });
+
+        songsList.appendChild(songItem);
+      });
+
+      content.appendChild(songsList);
+
+      // Ensure first song is selected and visible
+      setTimeout(() => {
+        selectSongInFullscreen(0);
+      }, 100);
+    }
+
+    fullscreenSongsView.appendChild(content);
+
+    // Instructions footer
+    const instructions = document.createElement("div");
+    instructions.classList.add("fullscreen-songs-instructions");
+    instructions.innerHTML = `
+      <kbd>↑</kbd><kbd>↓</kbd> Navigate • <kbd>Enter</kbd> Load Song • 
+      <kbd>R</kbd> Rename • <kbd>Delete</kbd> Remove • <kbd>Esc</kbd> Close
+    `;
+    fullscreenSongsView.appendChild(instructions);
+
+    // Add to DOM
+    document.body.appendChild(fullscreenSongsView);
+
+    // Add event listeners for keyboard navigation
+    document.addEventListener("keydown", handleFullscreenSongsKeydown);
+
+    // Make the view focusable and focus it
+    fullscreenSongsView.tabIndex = -1;
+    fullscreenSongsView.focus();
+  }
+
+  // Close fullscreen saved songs view
+  function closeFullscreenSavedSongs() {
+    if (fullscreenSongsView) {
+      document.removeEventListener("keydown", handleFullscreenSongsKeydown);
+      document.body.removeChild(fullscreenSongsView);
+      fullscreenSongsView = null;
+      fullscreenSongsList = [];
+      selectedSongIndex = 0;
+    }
+  }
+
+  // Handle keyboard navigation in fullscreen view
+  function handleFullscreenSongsKeydown(e) {
+    if (!fullscreenSongsView) return;
+
+    // Don't handle keys if there are no songs
+    if (fullscreenSongsList.length === 0) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeFullscreenSavedSongs();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowUp":
+        e.preventDefault();
+        navigateFullscreenSongs(-1);
+        break;
+
+      case "ArrowDown":
+        e.preventDefault();
+        navigateFullscreenSongs(1);
+        break;
+
+      case "Enter":
+        e.preventDefault();
+        loadSelectedSong();
+        break;
+
+      case "Delete":
+      case "Backspace":
+        e.preventDefault();
+        deleteSelectedSong();
+        break;
+
+      case "r":
+      case "R":
+        e.preventDefault();
+        renameSelectedSong();
+        break;
+
+      case "Escape":
+        e.preventDefault();
+        closeFullscreenSavedSongs();
+        break;
+    }
+  }
+
+  // Navigate songs in fullscreen view
+  function navigateFullscreenSongs(direction) {
+    const newIndex = selectedSongIndex + direction;
+
+    if (newIndex >= 0 && newIndex < fullscreenSongsList.length) {
+      selectSongInFullscreen(newIndex);
+    }
+  }
+
+  // Select a song in fullscreen view
+  function selectSongInFullscreen(index) {
+    const songsList = document.getElementById("fullscreen-songs-list");
+    if (!songsList) return;
+
+    // Remove previous selection
+    const previousSelected = songsList.querySelector(".selected");
+    if (previousSelected) {
+      previousSelected.classList.remove("selected");
+    }
+
+    // Add new selection
+    selectedSongIndex = index;
+    const newSelected = songsList.children[index];
+    if (newSelected) {
+      newSelected.classList.add("selected");
+      // Scroll into view
+      newSelected.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  // Load the currently selected song
+  function loadSelectedSong() {
+    if (
+      selectedSongIndex >= 0 &&
+      selectedSongIndex < fullscreenSongsList.length
+    ) {
+      const [id, song] = fullscreenSongsList[selectedSongIndex];
+      displaySong(song);
+      closeFullscreenSavedSongs();
+    }
+  }
+
+  // Delete the currently selected song
+  function deleteSelectedSong() {
+    if (
+      selectedSongIndex >= 0 &&
+      selectedSongIndex < fullscreenSongsList.length
+    ) {
+      const [id, song] = fullscreenSongsList[selectedSongIndex];
+      deleteSongInFullscreen(id, song);
+    }
+  }
+
+  // Rename the currently selected song
+  function renameSelectedSong() {
+    if (
+      selectedSongIndex >= 0 &&
+      selectedSongIndex < fullscreenSongsList.length
+    ) {
+      const [id, song] = fullscreenSongsList[selectedSongIndex];
+      const songItem = document.querySelector(`[data-song-id="${id}"]`);
+      renameSongInFullscreen(id, song, songItem);
+    }
+  }
+
+  // Rename song in fullscreen view
+  function renameSongInFullscreen(id, song, songItem) {
+    const newTitle = prompt("Enter new song title:", song.title);
+    if (newTitle === null) return;
+    const newArtist = prompt("Enter new artist name:", song.artist);
+    if (newArtist === null) return;
+
+    if (!newTitle.trim() || !newArtist.trim()) {
+      alert("Title and artist cannot be empty.");
+      return;
+    }
+
+    // Check for duplicate
+    const duplicate = Object.values(localSongs).some(
+      (s, idx) =>
+        s.title === newTitle.trim() &&
+        s.artist === newArtist.trim() &&
+        Object.keys(localSongs)[idx] !== id
+    );
+
+    if (duplicate) {
+      alert("A song with this title and artist already exists.");
+      return;
+    }
+
+    // Update song data
+    song.title = newTitle.trim();
+    song.artist = newArtist.trim();
+    localSongs[id] = song;
+    localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+
+    // Update UI
+    const titleElement = songItem.querySelector(".fullscreen-songs-title");
+    const artistElement = songItem.querySelector(".fullscreen-songs-artist");
+    if (titleElement) titleElement.textContent = song.title;
+    if (artistElement) artistElement.textContent = `by ${song.artist}`;
+
+    // Update the fullscreenSongsList array
+    fullscreenSongsList[selectedSongIndex][1] = song;
+  }
+
+  // Delete song in fullscreen view
+  function deleteSongInFullscreen(id, song) {
+    if (confirm(`Delete "${song.title}" from saved songs?`)) {
+      delete localSongs[id];
+      localStorage.setItem("savedSongs", JSON.stringify(localSongs));
+
+      // Remove from UI and update arrays
+      const songItem = document.querySelector(`[data-song-id="${id}"]`);
+      if (songItem) {
+        songItem.remove();
+      }
+
+      // Update fullscreenSongsList and selectedIndex
+      fullscreenSongsList = fullscreenSongsList.filter(
+        ([songId]) => songId !== id
+      );
+
+      // Adjust selected index if necessary
+      if (selectedSongIndex >= fullscreenSongsList.length) {
+        selectedSongIndex = Math.max(0, fullscreenSongsList.length - 1);
+      }
+
+      // If no songs left, show empty message
+      if (fullscreenSongsList.length === 0) {
+        closeFullscreenSavedSongs();
+        showFullscreenSavedSongs(); // Reopen to show empty state
+      } else {
+        // Re-select current song
+        selectSongInFullscreen(selectedSongIndex);
+      }
+
+      // Update the dropdown if it's open
+      updateSavedSongsDropdown();
+    }
+  }
+
+  // Make fullscreen function globally available
+  window.showFullscreenSavedSongs = showFullscreenSavedSongs;
+  window.closeFullscreenSavedSongs = closeFullscreenSavedSongs;
 });
