@@ -1133,20 +1133,22 @@ kbd {
 .fullscreen-songs-list {
   list-style: none;
   padding: 0;
-  margin: 0;
-  max-width: 1200px;
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 15px;
+  max-width: 100%;
 }
 
 .fullscreen-songs-list li {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   padding: 20px;
-  border-bottom: 1px solid #333;
-  gap: 20px;
+  border: 1px solid #333;
+  gap: 15px;
   transition: all 0.3s ease;
   border-radius: 8px;
-  margin-bottom: 10px;
   background-color: #262626;
 }
 
@@ -1158,7 +1160,6 @@ kbd {
   background-color: #3a3a3a;
   border: 2px solid #ffc107;
   box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
-  transform: scale(1.02);
 }
 
 .fullscreen-songs-list li.selected:hover {
@@ -1171,7 +1172,7 @@ kbd {
 }
 
 .fullscreen-songs-title {
-  font-size: 1.4rem;
+  font-size: 2rem;
   font-weight: bold;
   color: #fff;
   margin-bottom: 5px;
@@ -1179,7 +1180,7 @@ kbd {
 }
 
 .fullscreen-songs-artist {
-  font-size: 1.1rem;
+  font-size: 1.6rem;
   color: #bbb;
   word-break: break-word;
 }
@@ -1188,11 +1189,12 @@ kbd {
   display: flex;
   gap: 12px;
   flex-shrink: 0;
+  justify-content: flex-start;
 }
 
 .fullscreen-songs-actions button {
   padding: 12px 20px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   border-radius: 6px;
   min-width: 80px;
   transition: all 0.2s;
